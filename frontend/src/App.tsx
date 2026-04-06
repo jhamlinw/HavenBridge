@@ -22,6 +22,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
+        <Route path="/" element={<Navigate to="/welcome" replace />} />
         <Route path="/welcome" element={<LandingPage />} />
         <Route path="/impact" element={<PublicImpactPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -29,7 +30,7 @@ export default function App() {
 
         {/* Protected staff routes */}
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-          <Route index element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="cases" element={<CaseDashboardPage />} />
           <Route path="donors" element={<DonorManagementPage />} />
           <Route path="reports" element={<ReportsPage />} />

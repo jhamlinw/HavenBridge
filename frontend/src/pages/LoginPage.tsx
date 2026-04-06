@@ -17,7 +17,7 @@ export default function LoginPage() {
     }
     setError('');
     localStorage.setItem('hb_auth', 'staff');
-    navigate('/');
+    navigate('/dashboard');
   };
 
   return (

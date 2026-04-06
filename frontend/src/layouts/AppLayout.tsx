@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: HomeIcon },
+  { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
   { to: '/cases', label: 'Cases', icon: ClipboardDocumentListIcon },
   { to: '/donors', label: 'Donors', icon: HeartIcon },
   { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon },
@@ -30,7 +30,7 @@ export default function AppLayout() {
     <div className="min-h-screen flex flex-col">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-[1600px] mx-auto flex items-center h-16 px-6">
-          <NavLink to="/" className="flex items-center gap-2.5 mr-10">
+          <NavLink to="/dashboard" className="flex items-center gap-2.5 mr-10">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-haven-600 to-haven-800 flex items-center justify-center">
               <span className="text-white font-bold text-lg">H</span>
             </div>
@@ -44,7 +44,7 @@ export default function AppLayout() {
               <NavLink
                 key={to}
                 to={to}
-                end={to === '/'}
+                end={to === '/dashboard'}
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive

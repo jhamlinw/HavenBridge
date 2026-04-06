@@ -11,7 +11,6 @@ export default function DonorPortalPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // For the scaffold, default to supporter ID 1 (simulating a logged-in donor)
     const donorId = 1;
     Promise.all([
       api.supporters.get(donorId),
