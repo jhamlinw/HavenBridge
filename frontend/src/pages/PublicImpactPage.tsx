@@ -58,7 +58,7 @@ export default function PublicImpactPage() {
       <header className="border-b border-haven-100 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-6 py-8">
           <Link
-            to="/"
+            to="/welcome"
             className="inline-flex items-center gap-2 text-sm font-medium text-haven-700 hover:text-haven-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-haven-500 focus-visible:ring-offset-2 rounded-md"
           >
             <ArrowLeftIcon className="h-4 w-4" aria-hidden />

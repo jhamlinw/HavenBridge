@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
         </div>
 
         <p className="mt-12 pt-8 border-t border-gray-100 text-center">
-          <Link to="/" className="text-haven-600 hover:text-haven-700 font-medium text-sm">
+          <Link to="/welcome" className="text-haven-600 hover:text-haven-700 font-medium text-sm">
             Back to home
           </Link>
         </p>
