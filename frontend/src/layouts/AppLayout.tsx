@@ -1,24 +1,33 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   HomeIcon,
   UserGroupIcon,
   HeartIcon,
   ClipboardDocumentListIcon,
+  ChartBarSquareIcon,
   Cog6ToothIcon,
+  ArrowRightStartOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: HomeIcon },
   { to: '/cases', label: 'Cases', icon: ClipboardDocumentListIcon },
   { to: '/donors', label: 'Donors', icon: HeartIcon },
+  { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon },
   { to: '/admin', label: 'Admin', icon: Cog6ToothIcon },
   { to: '/donor-portal', label: 'Donor Portal', icon: UserGroupIcon },
 ];
 
 export default function AppLayout() {
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    localStorage.removeItem('hb_auth');
+    navigate('/welcome');
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Top Navigation */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-[1600px] mx-auto flex items-center h-16 px-6">
           <NavLink to="/" className="flex items-center gap-2.5 mr-10">
@@ -49,6 +58,16 @@ export default function AppLayout() {
               </NavLink>
             ))}
           </nav>
+
+          <div className="ml-auto">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+            >
+              <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+              Sign Out
+            </button>
+          </div>
         </div>
       </header>
 

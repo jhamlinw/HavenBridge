@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Modal from '../components/Modal';
 import type { Resident, AlertsData } from '../types/models';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/solid';
+import { ExclamationTriangleIcon, MagnifyingGlassIcon, FunnelIcon, PlusIcon } from '@heroicons/react/24/solid';
 
 type Tab = 'sessions' | 'health' | 'education' | 'visits' | 'notes';
 
@@ -14,11 +15,74 @@ export default function CaseDashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('sessions');
   const [loading, setLoading] = useState(true);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [riskFilter, setRiskFilter] = useState<string>('');
+
   useEffect(() => {
     Promise.all([api.residents.list(), api.residents.alerts()])
       .then(([r, a]) => { setResidents(r); setAlerts(a); })
       .finally(() => setLoading(false));
   }, []);
+
+  const [showSessionForm, setShowSessionForm] = useState(false);
+  const [showVisitForm, setShowVisitForm] = useState(false);
+  const [sessionForm, setSessionForm] = useState({ sessionType: 'Individual', sessionDurationMinutes: 60, emotionalStateObserved: '', emotionalStateEnd: '', sessionNarrative: '', interventionsApplied: '', followUpActions: '' });
+  const [visitForm, setVisitForm] = useState({ visitType: 'Routine Follow-Up', locationVisited: '', purpose: '', observations: '', familyCooperationLevel: 'Cooperative' });
+
+  const handleAddSession = async () => {
+    if (!selected) return;
+    await api.sessions.create({
+      residentId: selected.residentId,
+      sessionDate: new Date().toISOString().split('T')[0],
+      socialWorker: selected.assignedSocialWorker,
+      ...sessionForm,
+      progressNoted: false,
+      concernsFlagged: false,
+      referralMade: false,
+    });
+    const detail = await api.residents.get(selected.residentId);
+    setSelected(detail);
+    setShowSessionForm(false);
+    setSessionForm({ sessionType: 'Individual', sessionDurationMinutes: 60, emotionalStateObserved: '', emotionalStateEnd: '', sessionNarrative: '', interventionsApplied: '', followUpActions: '' });
+  };
+
+  const handleAddVisit = async () => {
+    if (!selected) return;
+    await api.visits.create({
+      residentId: selected.residentId,
+      visitDate: new Date().toISOString().split('T')[0],
+      socialWorker: selected.assignedSocialWorker,
+      ...visitForm,
+      safetyConcernsNoted: false,
+      followUpNeeded: false,
+      visitOutcome: 'Favorable',
+    });
+    const detail = await api.residents.get(selected.residentId);
+    setSelected(detail);
+    setShowVisitForm(false);
+    setVisitForm({ visitType: 'Routine Follow-Up', locationVisited: '', purpose: '', observations: '', familyCooperationLevel: 'Cooperative' });
+  };
+
+  const filteredResidents = useMemo(() => {
+    let filtered = residents;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      filtered = filtered.filter(r =>
+        r.internalCode?.toLowerCase().includes(q) ||
+        r.caseControlNo?.toLowerCase().includes(q) ||
+        r.assignedSocialWorker?.toLowerCase().includes(q) ||
+        r.caseCategory?.toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter) {
+      filtered = filtered.filter(r => r.caseStatus === statusFilter);
+    }
+    if (riskFilter) {
+      filtered = filtered.filter(r => r.currentRiskLevel === riskFilter);
+    }
+    return filtered;
+  }, [residents, searchTerm, statusFilter, riskFilter]);
 
   const selectResident = async (id: number) => {
     const detail = await api.residents.get(id);
@@ -51,14 +115,49 @@ export default function CaseDashboardPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Resident Case Dashboard</h1>
 
       <div className="flex gap-6">
-        {/* Left Sidebar — Resident List */}
-        <aside className="w-72 shrink-0">
+        <aside className="w-80 shrink-0">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-700">Residents ({residents.length})</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-gray-700">Residents ({filteredResidents.length})</h3>
+                <FunnelIcon className="h-4 w-4 text-gray-400" />
+              </div>
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search code, worker, category..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-haven-500 focus:border-haven-500"
+                />
+              </div>
+              <div className="flex gap-2 mt-2">
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-haven-500"
+                >
+                  <option value="">All Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Closed">Closed</option>
+                  <option value="Transferred">Transferred</option>
+                </select>
+                <select
+                  value={riskFilter}
+                  onChange={e => setRiskFilter(e.target.value)}
+                  className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-haven-500"
+                >
+                  <option value="">All Risk</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
             </div>
-            <ul className="divide-y divide-gray-100 max-h-[calc(100vh-220px)] overflow-y-auto">
-              {residents.map(r => (
+            <ul className="divide-y divide-gray-100 max-h-[calc(100vh-340px)] overflow-y-auto">
+              {filteredResidents.map(r => (
                 <li key={r.residentId}>
                   <button
                     onClick={() => selectResident(r.residentId)}
@@ -130,6 +229,11 @@ export default function CaseDashboardPage() {
                 <div className="p-6">
                   {activeTab === 'sessions' && (
                     <div className="space-y-4">
+                      <div className="flex justify-end">
+                        <button onClick={() => setShowSessionForm(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-haven-600 text-white text-xs font-medium rounded-lg hover:bg-haven-700 transition-colors">
+                          <PlusIcon className="h-4 w-4" /> Add Session
+                        </button>
+                      </div>
                       {(selected.processRecordings?.length ?? 0) === 0 && <p className="text-gray-400 text-sm">No sessions recorded yet.</p>}
                       {selected.processRecordings?.map(s => (
                         <div key={s.recordingId} className="border border-gray-100 rounded-lg p-4">
@@ -200,6 +304,11 @@ export default function CaseDashboardPage() {
 
                   {activeTab === 'visits' && (
                     <div className="space-y-4">
+                      <div className="flex justify-end">
+                        <button onClick={() => setShowVisitForm(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-haven-600 text-white text-xs font-medium rounded-lg hover:bg-haven-700 transition-colors">
+                          <PlusIcon className="h-4 w-4" /> Add Visit
+                        </button>
+                      </div>
                       {(selected.homeVisitations?.length ?? 0) === 0 && <p className="text-gray-400 text-sm">No home visits recorded yet.</p>}
                       {selected.homeVisitations?.map(v => (
                         <div key={v.visitationId} className="border border-gray-100 rounded-lg p-4">
@@ -293,6 +402,84 @@ export default function CaseDashboardPage() {
           </div>
         </aside>
       </div>
+
+      <Modal open={showSessionForm} onClose={() => setShowSessionForm(false)} title="Add Counseling Session">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Session Type</label>
+            <select value={sessionForm.sessionType} onChange={e => setSessionForm(f => ({ ...f, sessionType: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500">
+              <option>Individual</option><option>Group</option><option>Family</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Duration (min)</label>
+            <input type="number" value={sessionForm.sessionDurationMinutes} onChange={e => setSessionForm(f => ({ ...f, sessionDurationMinutes: +e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Emotional Start</label>
+              <select value={sessionForm.emotionalStateObserved} onChange={e => setSessionForm(f => ({ ...f, emotionalStateObserved: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500">
+                <option value="">Select...</option><option>Calm</option><option>Anxious</option><option>Sad</option><option>Angry</option><option>Hopeful</option><option>Distressed</option><option>Withdrawn</option><option>Happy</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Emotional End</label>
+              <select value={sessionForm.emotionalStateEnd} onChange={e => setSessionForm(f => ({ ...f, emotionalStateEnd: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500">
+                <option value="">Select...</option><option>Calm</option><option>Anxious</option><option>Sad</option><option>Angry</option><option>Hopeful</option><option>Distressed</option><option>Withdrawn</option><option>Happy</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Narrative</label>
+            <textarea rows={3} value={sessionForm.sessionNarrative} onChange={e => setSessionForm(f => ({ ...f, sessionNarrative: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Interventions Applied</label>
+            <input value={sessionForm.interventionsApplied} onChange={e => setSessionForm(f => ({ ...f, interventionsApplied: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" placeholder="e.g. Healing, Teaching" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Follow-Up Actions</label>
+            <input value={sessionForm.followUpActions} onChange={e => setSessionForm(f => ({ ...f, followUpActions: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => setShowSessionForm(false)} className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+            <button onClick={handleAddSession} className="px-4 py-2 text-sm font-medium text-white bg-haven-600 rounded-lg hover:bg-haven-700">Save Session</button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={showVisitForm} onClose={() => setShowVisitForm(false)} title="Add Home Visit">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Visit Type</label>
+            <select value={visitForm.visitType} onChange={e => setVisitForm(f => ({ ...f, visitType: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500">
+              <option>Routine Follow-Up</option><option>Reintegration Assessment</option><option>Post-Placement Monitoring</option><option>Emergency</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Location Visited</label>
+            <input value={visitForm.locationVisited} onChange={e => setVisitForm(f => ({ ...f, locationVisited: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" placeholder="e.g. Family Home" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
+            <input value={visitForm.purpose} onChange={e => setVisitForm(f => ({ ...f, purpose: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Observations</label>
+            <textarea rows={3} value={visitForm.observations} onChange={e => setVisitForm(f => ({ ...f, observations: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Family Cooperation</label>
+            <select value={visitForm.familyCooperationLevel} onChange={e => setVisitForm(f => ({ ...f, familyCooperationLevel: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500">
+              <option>Highly Cooperative</option><option>Cooperative</option><option>Neutral</option><option>Uncooperative</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => setShowVisitForm(false)} className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+            <button onClick={handleAddVisit} className="px-4 py-2 text-sm font-medium text-white bg-haven-600 rounded-lg hover:bg-haven-700">Save Visit</button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

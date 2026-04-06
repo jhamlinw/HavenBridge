@@ -3,12 +3,14 @@ import { api } from '../services/api';
 import SummaryCard from '../components/SummaryCard';
 import StatusBadge from '../components/StatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Modal from '../components/Modal';
 import type { Supporter, SupporterSummary, DonorImpact } from '../types/models';
 import {
   UserGroupIcon,
   UserIcon,
   ExclamationCircleIcon,
   BanknotesIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 
 export default function DonorManagementPage() {
@@ -17,6 +19,24 @@ export default function DonorManagementPage() {
   const [selected, setSelected] = useState<Supporter | null>(null);
   const [impact, setImpact] = useState<DonorImpact | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showDonationForm, setShowDonationForm] = useState(false);
+  const [donationForm, setDonationForm] = useState({ donationType: 'Monetary', amount: 0, campaignName: '', currencyCode: 'PHP', isRecurring: false });
+
+  const handleAddDonation = async () => {
+    if (!selected) return;
+    await api.donations.create({
+      supporterId: selected.supporterId,
+      donationDate: new Date().toISOString().split('T')[0],
+      ...donationForm,
+      channelSource: 'Direct',
+    });
+    const detail = await api.supporters.get(selected.supporterId);
+    setSelected(detail);
+    const imp = await api.impact.donorImpact(selected.supporterId);
+    setImpact(imp);
+    setShowDonationForm(false);
+    setDonationForm({ donationType: 'Monetary', amount: 0, campaignName: '', currencyCode: 'PHP', isRecurring: false });
+  };
 
   useEffect(() => {
     Promise.all([api.supporters.list(), api.supporters.summary()])
@@ -160,10 +180,9 @@ export default function DonorManagementPage() {
                 </div>
               )}
 
-              {/* CTAs */}
               <div className="flex gap-3">
-                <button className="flex-1 bg-haven-600 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-haven-700 transition-colors">
-                  Send Outreach
+                <button onClick={() => setShowDonationForm(true)} className="flex-1 flex items-center justify-center gap-1.5 bg-haven-600 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-haven-700 transition-colors">
+                  <PlusIcon className="h-4 w-4" /> Add Donation
                 </button>
                 <button className="flex-1 border border-red-200 text-red-700 text-sm font-medium py-2.5 rounded-lg hover:bg-red-50 transition-colors">
                   Flag At-Risk
@@ -173,6 +192,41 @@ export default function DonorManagementPage() {
           )}
         </aside>
       </div>
+
+      <Modal open={showDonationForm} onClose={() => setShowDonationForm(false)} title="Record Donation">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Donation Type</label>
+            <select value={donationForm.donationType} onChange={e => setDonationForm(f => ({ ...f, donationType: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500">
+              <option>Monetary</option><option>InKind</option><option>Time</option><option>Skills</option><option>SocialMedia</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+              <input type="number" value={donationForm.amount} onChange={e => setDonationForm(f => ({ ...f, amount: +e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <select value={donationForm.currencyCode} onChange={e => setDonationForm(f => ({ ...f, currencyCode: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500">
+                <option>PHP</option><option>USD</option><option>SGD</option><option>CAD</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Campaign</label>
+            <input value={donationForm.campaignName} onChange={e => setDonationForm(f => ({ ...f, campaignName: e.target.value }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-haven-500 focus:border-haven-500" placeholder="Optional campaign name" />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={donationForm.isRecurring} onChange={e => setDonationForm(f => ({ ...f, isRecurring: e.target.checked }))} className="rounded border-gray-300 text-haven-600 focus:ring-haven-500" />
+            Recurring Donation
+          </label>
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => setShowDonationForm(false)} className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+            <button onClick={handleAddDonation} className="px-4 py-2 text-sm font-medium text-white bg-haven-600 rounded-lg hover:bg-haven-700">Save Donation</button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

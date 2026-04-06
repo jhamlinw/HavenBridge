@@ -31,6 +31,12 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<HavenBridgeContext>();
     db.Database.EnsureCreated();
+
+    var seedFolder = Path.Combine(AppContext.BaseDirectory, "SeedData");
+    if (Directory.Exists(seedFolder))
+    {
+        await CsvDataImporter.ImportAllAsync(db, seedFolder);
+    }
 }
 
 if (app.Environment.IsDevelopment())
