@@ -26,35 +26,34 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <header className="relative overflow-hidden bg-gradient-to-br from-haven-600 via-haven-800 to-haven-900 text-white">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0%, transparent 45%), radial-gradient(circle at 80% 60%, rgba(124,196,250,0.2) 0%, transparent 40%)',
-          }}
+      <header className="relative overflow-hidden text-white">
+        <img
+          src="/welcome_banner.png"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="relative mx-auto max-w-5xl px-6 py-20 sm:py-28 text-center">
-          <p className="text-sm font-medium uppercase tracking-widest text-haven-200/90 mb-4">
-            Lighthouse Sanctuary
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative mx-auto max-w-5xl px-6 py-16 sm:py-24 text-center">
+          <p className="text-sm font-medium uppercase tracking-widest text-white/80 mb-4">
+            HavenBridge
           </p>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white drop-shadow-sm">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-md">
             Protecting vulnerable children, together
           </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-lg text-haven-100 leading-relaxed">
+          <p className="mt-6 max-w-2xl mx-auto text-lg text-white/90 leading-relaxed drop-shadow-sm">
             HavenBridge coordinates safe shelter, counseling, and transparent stewardship so every
             child in our care has a path to safety and hope.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/impact"
-              className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-base font-semibold text-haven-800 shadow-lg hover:bg-haven-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-haven-800"
+              className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-base font-semibold text-haven-800 shadow-lg hover:bg-haven-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/50"
             >
               See Our Impact
             </Link>
             <Link
               to="/login"
-              className="inline-flex items-center justify-center rounded-lg border-2 border-white/80 bg-white/10 px-6 py-3 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-haven-800"
+              className="inline-flex items-center justify-center rounded-lg border-2 border-white/80 bg-white/15 px-6 py-3 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/25 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/50"
             >
               Staff Login
             </Link>
@@ -162,7 +161,7 @@ export default function LandingPage() {
       <footer className="mt-auto bg-haven-900 text-haven-100 py-10">
         <div className="mx-auto max-w-6xl px-6 text-center">
           <p className="font-semibold text-white text-lg">HavenBridge</p>
-          <p className="mt-1 text-sm text-haven-200">Lighthouse Sanctuary</p>
+          <p className="mt-1 text-sm text-haven-200">Safe shelter, real impact</p>
           <p className="mt-6 text-xs text-haven-300/80">
             © {new Date().getFullYear()} HavenBridge. All rights reserved.
           </p>

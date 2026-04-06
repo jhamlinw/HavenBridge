@@ -68,8 +68,8 @@ export default function PublicImpactPage() {
             Our Impact
           </h1>
           <p className="mt-3 max-w-2xl text-gray-600 leading-relaxed">
-            Aggregated, anonymized numbers and published updates from HavenBridge (Lighthouse
-            Sanctuary). Individual children are never identified here.
+            Aggregated, anonymized numbers and published updates from HavenBridge.
+            Individual children are never identified here.
           </p>
         </div>
       </header>
@@ -162,7 +162,7 @@ export default function PublicImpactPage() {
       </main>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-500">
-        <p className="font-medium text-gray-700">HavenBridge · Lighthouse Sanctuary</p>
+        <p className="font-medium text-gray-700">HavenBridge</p>
       </footer>
     </div>
   );
