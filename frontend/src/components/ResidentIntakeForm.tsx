@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import type { Resident } from '../types/models';
+import type { Resident, User } from '../types/models';
 
 export const ResidentIntakeForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [socialWorkers, setSocialWorkers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   
@@ -26,10 +27,18 @@ export const ResidentIntakeForm = () => {
     subCatTrafficked: false,
   });
 
+  useEffect(() => {
+    api.users.list()
+      .then(users => {
+        // Filter for users where isSocialWorker is true
+        const workers = users.filter(u => u.isSocialWorker);
+        setSocialWorkers(workers);
+      })
+      .catch(err => console.error("Failed to load social workers", err));
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
-    // Safely cast the target to an HTMLInputElement to access 'checked'
     const isCheckbox = type === 'checkbox';
     const checked = isCheckbox ? (e.target as HTMLInputElement).checked : false;
     
@@ -95,7 +104,20 @@ export const ResidentIntakeForm = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Assigned Social Worker</label>
-            <input type="text" name="assignedSocialWorker" value={formData.assignedSocialWorker} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" />
+            <select 
+              required
+              name="assignedSocialWorker" 
+              value={formData.assignedSocialWorker} 
+              onChange={handleChange} 
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+            >
+              <option value="">Select a Social Worker...</option>
+              {socialWorkers.map(worker => (
+                <option key={worker.userId} value={`${worker.userFirstName} ${worker.userLastName}`}>
+                  {worker.userFirstName} {worker.userLastName}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </fieldset>
