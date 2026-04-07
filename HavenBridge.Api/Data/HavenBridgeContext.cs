@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using HavenBridge.Api.Models;
 
 namespace HavenBridge.Api.Data;
@@ -46,5 +47,79 @@ public class HavenBridgeContext : DbContext
             .WithMany(s => s.DonationAllocations)
             .HasForeignKey(da => da.SafehouseId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // MySQL TEXT column types for long-content fields
+        modelBuilder.Entity<ProcessRecording>(e =>
+        {
+            e.Property(p => p.SessionNarrative).HasColumnType("text");
+            e.Property(p => p.InterventionsApplied).HasColumnType("text");
+            e.Property(p => p.FollowUpActions).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<HomeVisitation>(e =>
+        {
+            e.Property(p => p.Observations).HasColumnType("text");
+            e.Property(p => p.FollowUpNotes).HasColumnType("text");
+            e.Property(p => p.Purpose).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<InterventionPlan>(e =>
+        {
+            e.Property(p => p.PlanDescription).HasColumnType("text");
+            e.Property(p => p.ServicesProvided).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<IncidentReport>(e =>
+        {
+            e.Property(p => p.Description).HasColumnType("text");
+            e.Property(p => p.ResponseTaken).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<Resident>(e =>
+        {
+            e.Property(p => p.InitialCaseAssessment).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<PublicImpactSnapshot>(e =>
+        {
+            e.Property(p => p.SummaryText).HasColumnType("text");
+            e.Property(p => p.MetricPayloadJson).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<SocialMediaPost>(e =>
+        {
+            e.Property(p => p.Caption).HasColumnType("text");
+            e.Property(p => p.Hashtags).HasColumnType("text");
+            e.Property(p => p.PostUrl).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<Safehouse>(e =>
+        {
+            e.Property(p => p.Notes).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<Donation>(e =>
+        {
+            e.Property(p => p.Notes).HasColumnType("text");
+        });
+
+        // Oracle MySQL provider returns DATE columns as DateTime; convert to/from DateOnly
+        var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
+            d => d.ToDateTime(TimeOnly.MinValue),
+            dt => DateOnly.FromDateTime(dt));
+        var nullableDateOnlyConverter = new ValueConverter<DateOnly?, DateTime?>(
+            d => d.HasValue ? d.Value.ToDateTime(TimeOnly.MinValue) : null,
+            dt => dt.HasValue ? DateOnly.FromDateTime(dt.Value) : null);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateOnly))
+                    property.SetValueConverter(dateOnlyConverter);
+                else if (property.ClrType == typeof(DateOnly?))
+                    property.SetValueConverter(nullableDateOnlyConverter);
+            }
+        }
     }
 }

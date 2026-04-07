@@ -146,11 +146,11 @@ public class Resident
 
     // Age & stay
     [Column("age_upon_admission")]
-    [MaxLength(10)]
+    [MaxLength(50)]
     public string? AgeUponAdmission { get; set; }
 
     [Column("present_age")]
-    [MaxLength(10)]
+    [MaxLength(50)]
     public string? PresentAge { get; set; }
 
     [Column("length_of_stay")]

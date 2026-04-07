@@ -1,16 +1,51 @@
 # Getting Started — HavenBridge
 
+## Prerequisites
+
+| Tool | Version | Download |
+|------|---------|----------|
+| .NET SDK | 10+ | https://dotnet.microsoft.com/download |
+| Node.js | 20+ | https://nodejs.org/ |
+| MySQL | 8+ | https://dev.mysql.com/downloads/mysql/ |
+
+### MySQL Setup
+
+Install MySQL Server 8+ and make sure the `mysql` command-line client is in your system PATH.
+
+**Windows (MySQL Installer):**
+1. Download the [MySQL Installer](https://dev.mysql.com/downloads/installer/)
+2. Choose "Developer Default" or "Server only"
+3. Set a root password during setup (the app defaults to `HavenBridge2026!`)
+4. Make sure "Add MySQL to PATH" is checked, or add it manually:
+   - Typical path: `C:\Program Files\MySQL\MySQL Server 8.x\bin`
+
+**Verify it's working:**
+
+```powershell
+mysql --version
+mysql -u root -p -e "SELECT 1"
+```
+
+If your root password differs from `HavenBridge2026!`, update the connection string in `HavenBridge.Api/appsettings.json`:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=localhost;Port=3306;Database=havenbridge;User=root;Password=YOUR_PASSWORD_HERE;"
+}
+```
+
+---
+
 ## First-Time Setup (do this once)
 
-1. Install [.NET 10 SDK](https://dotnet.microsoft.com/download) and [Node.js 20+](https://nodejs.org/)
-2. Clone the repo and open a terminal in the `HavenBridge` folder
-3. Run:
+1. Clone the repo and open a terminal in the `HavenBridge` folder
+2. Run:
 
 ```powershell
 .\setup.ps1
 ```
 
-This installs all backend and frontend dependencies.
+This checks all prerequisites, creates the `havenbridge` MySQL database, installs .NET and frontend dependencies.
 
 ---
 
@@ -21,6 +56,8 @@ This installs all backend and frontend dependencies.
 ```
 
 This starts both the backend and frontend. Open **http://localhost:5173** in your browser.
+
+The backend auto-seeds the database from CSV files on first run if the tables are empty.
 
 To stop, press **Ctrl+C**.
 
@@ -35,9 +72,7 @@ git pull
 .\start.ps1
 ```
 
-That's it. The frontend hot-reloads most changes automatically, but restarting is the safest bet.
-
-### If the change involves database/CSV updates
+### If the change involves database/model/CSV updates
 
 ```powershell
 git pull
@@ -45,9 +80,9 @@ git pull
 .\start.ps1
 ```
 
-`reset-db.ps1` deletes your local database so it gets rebuilt from the latest CSV seed files on next startup.
+`reset-db.ps1` drops and recreates the MySQL database so it gets rebuilt from the latest CSV seed files on next startup.
 
-**How do I know if the DB changed?** Check if any files in `HavenBridge.Api/SeedData/` or `HavenBridge.Api/Models/` were modified in the pull.
+**How do I know if the DB changed?** Check if any files in `HavenBridge.Api/SeedData/`, `HavenBridge.Api/Models/`, or `HavenBridge.Api/Data/` were modified in the pull.
 
 ---
 
@@ -76,4 +111,16 @@ git pull
 | http://localhost:5173/donors | Staff — donor management | Yes |
 | http://localhost:5173/reports | Staff — reports & analytics | Yes |
 
-**Login:** Enter any email and password. There is no real authentication — it just sets a local flag.
+**Login:** Enter any email and password. There is no real authentication yet — it just sets a local flag.
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `mysql` not found | Add MySQL's `bin` folder to your system PATH |
+| Access denied for root | Check your password in `appsettings.json` matches your MySQL root password |
+| Backend crashes on start | Make sure MySQL is running: `net start MySQL80` (Windows) |
+| Tables are empty | Run `.\reset-db.ps1` then `.\start.ps1` to re-seed |
+| Port 3306 in use | Another MySQL instance may be running; check with `netstat -an | findstr 3306` |

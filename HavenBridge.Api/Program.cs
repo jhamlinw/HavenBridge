@@ -11,9 +11,11 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=localhost;Port=3306;Database=havenbridge;User=root;Password=HavenBridge2026!;";
+
 builder.Services.AddDbContext<HavenBridgeContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Data Source=havenbridge.db"));
+    options.UseMySQL(connectionString));
 
 builder.Services.AddCors(options =>
 {
@@ -38,7 +40,6 @@ using (var scope = app.Services.CreateScope())
         await CsvDataImporter.ImportAllAsync(db, seedFolder);
     }
 
-    // Hide future snapshots that have no real health/education data
     await db.Database.ExecuteSqlRawAsync(
         "UPDATE PUBLIC_IMPACT_SNAPSHOTS SET is_published = 0 WHERE snapshot_date >= '2026-03-01' AND is_published = 1");
 }
