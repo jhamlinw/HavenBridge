@@ -128,7 +128,7 @@ export default function AdminPortalPage() {
               }`} />
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">{item.description}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{item.type} &middot; {item.date} {item.socialWorker && `· ${item.socialWorker}`}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{item.type} &middot; {item.date} {item.socialWorkerName && `· ${item.socialWorkerName}`}</p>
               </div>
             </div>
           ))}

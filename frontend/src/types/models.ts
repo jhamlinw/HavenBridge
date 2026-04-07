@@ -51,11 +51,28 @@ export interface Resident {
   incidentReports?: IncidentReport[];
 }
 
+export interface Role {
+  roleId: number;
+  description: string;
+}
+
+export interface User {
+  userId: number;
+  roleId: number;
+  supporterId?: number;
+  username: string;
+  userFirstName?: string;
+  userLastName?: string;
+  isSocialWorker: boolean;
+  role?: Role;
+}
+
 export interface ProcessRecording {
   recordingId: number;
   residentId: number;
   sessionDate: string;
-  socialWorker?: string;
+  socialWorkerId?: number;
+  socialWorker?: User;
   sessionType?: string;
   sessionDurationMinutes: number;
   emotionalStateObserved?: string;
@@ -140,6 +157,8 @@ export interface IncidentReport {
   resolutionDate?: string;
   reportedBy?: string;
   followUpRequired: boolean;
+  userId?: number;
+  user?: User;
 }
 
 export interface Supporter {
@@ -206,7 +225,7 @@ export interface RecentActivity {
   type: string;
   date: string;
   description: string;
-  socialWorker: string;
+  socialWorkerName: string;
 }
 
 export interface ImpactOverview {

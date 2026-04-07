@@ -25,6 +25,8 @@ public class HavenBridgeContext : DbContext
     public DbSet<SafehouseMonthlyMetric> SafehouseMonthlyMetrics => Set<SafehouseMonthlyMetric>();
     public DbSet<SocialMediaPost> SocialMediaPosts => Set<SocialMediaPost>();
     public DbSet<PublicImpactSnapshot> PublicImpactSnapshots => Set<PublicImpactSnapshot>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +48,30 @@ public class HavenBridgeContext : DbContext
             .HasOne(da => da.Safehouse)
             .WithMany(s => s.DonationAllocations)
             .HasForeignKey(da => da.SafehouseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(u => u.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Supporter)
+            .WithMany(s => s.Users)
+            .HasForeignKey(u => u.SupporterId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<IncidentReport>()
+            .HasOne(ir => ir.User)
+            .WithMany(u => u.IncidentReports)
+            .HasForeignKey(ir => ir.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ProcessRecording>()
+            .HasOne(pr => pr.SocialWorker)
+            .WithMany(u => u.ProcessRecordings)
+            .HasForeignKey(pr => pr.SocialWorkerId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // MySQL TEXT column types for long-content fields

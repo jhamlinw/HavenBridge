@@ -16,9 +16,8 @@ public class ProcessRecording
     [Column("session_date")]
     public DateOnly SessionDate { get; set; }
 
-    [Column("social_worker")]
-    [MaxLength(200)]
-    public string? SocialWorker { get; set; }
+    [Column("social_worker_id")]
+    public int? SocialWorkerId { get; set; }
 
     [Column("session_type")]
     [MaxLength(100)]
@@ -58,4 +57,7 @@ public class ProcessRecording
 
     [ForeignKey(nameof(ResidentId))]
     public Resident? Resident { get; set; }
+
+    [ForeignKey(nameof(SocialWorkerId))]
+    public User? SocialWorker { get; set; }
 }

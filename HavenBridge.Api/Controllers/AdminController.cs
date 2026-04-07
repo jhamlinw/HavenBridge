@@ -15,22 +15,23 @@ public class AdminController : ControllerBase
     public async Task<ActionResult> GetRecentActivity()
     {
         var recentSessions = await _db.ProcessRecordings
+            .Include(p => p.SocialWorker)
             .OrderByDescending(p => p.SessionDate)
             .Take(5)
-            .Select(p => new { Type = "Session", Date = p.SessionDate.ToString(), Description = $"{p.SessionType} with resident #{p.ResidentId}", p.SocialWorker })
+            .Select(p => new { Type = "Session", Date = p.SessionDate.ToString(), Description = $"{p.SessionType} with resident #{p.ResidentId}", SocialWorkerName = p.SocialWorker != null ? $"{p.SocialWorker.UserFirstName} {p.SocialWorker.UserLastName}" : "" })
             .ToListAsync();
 
         var recentVisits = await _db.HomeVisitations
             .OrderByDescending(h => h.VisitDate)
             .Take(5)
-            .Select(h => new { Type = "Home Visit", Date = h.VisitDate.ToString(), Description = $"{h.VisitType} at {h.LocationVisited}", h.SocialWorker })
+            .Select(h => new { Type = "Home Visit", Date = h.VisitDate.ToString(), Description = $"{h.VisitType} at {h.LocationVisited}", SocialWorkerName = h.SocialWorker ?? "" })
             .ToListAsync();
 
         var recentDonations = await _db.Donations
             .Include(d => d.Supporter)
             .OrderByDescending(d => d.DonationDate)
             .Take(5)
-            .Select(d => new { Type = "Donation", Date = d.DonationDate.ToString(), Description = $"{d.Supporter!.DisplayName} — {d.CurrencyCode} {d.Amount}", SocialWorker = "" })
+            .Select(d => new { Type = "Donation", Date = d.DonationDate.ToString(), Description = $"{d.Supporter!.DisplayName} — {d.CurrencyCode} {d.Amount}", SocialWorkerName = "" })
             .ToListAsync();
 
         var activity = recentSessions

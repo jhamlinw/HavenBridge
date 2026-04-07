@@ -64,6 +64,6 @@ public class Supporter
     [MaxLength(100)]
     public string? AcquisitionChannel { get; set; }
 
-    // Navigation
     public ICollection<Donation> Donations { get; set; } = [];
+    public ICollection<User> Users { get; set; } = [];
 }

@@ -1,0 +1,21 @@
+user_id,role_id,supporter_id,username,password_hash,user_first_name,user_last_name,is_social_worker
+1,2,,sw01,PLACEHOLDER_HASH,Maria,Santos,True
+2,2,,sw02,PLACEHOLDER_HASH,Jose,Reyes,True
+3,2,,sw03,PLACEHOLDER_HASH,Ana,Cruz,True
+4,2,,sw04,PLACEHOLDER_HASH,Miguel,Garcia,True
+5,2,,sw05,PLACEHOLDER_HASH,Rosa,Fernandez,True
+6,2,,sw06,PLACEHOLDER_HASH,Carlos,Dela Cruz,True
+7,2,,sw07,PLACEHOLDER_HASH,Elena,Ramos,True
+8,2,,sw08,PLACEHOLDER_HASH,Rafael,Torres,True
+9,2,,sw09,PLACEHOLDER_HASH,Lucia,Bautista,True
+10,2,,sw10,PLACEHOLDER_HASH,Pedro,Villanueva,True
+11,2,,sw11,PLACEHOLDER_HASH,Isabel,Mendoza,True
+12,2,,sw12,PLACEHOLDER_HASH,Antonio,Gonzales,True
+13,2,,sw13,PLACEHOLDER_HASH,Teresa,Aquino,True
+14,2,,sw14,PLACEHOLDER_HASH,Francisco,Soriano,True
+15,2,,sw15,PLACEHOLDER_HASH,Carmen,Navarro,True
+16,2,,sw16,PLACEHOLDER_HASH,Manuel,Pascual,True
+17,2,,sw17,PLACEHOLDER_HASH,Gloria,Aguilar,True
+18,2,,sw18,PLACEHOLDER_HASH,Ricardo,Castillo,True
+19,2,,sw19,PLACEHOLDER_HASH,Patricia,Flores,True
+20,2,,sw20,PLACEHOLDER_HASH,Ernesto,Santiago,True

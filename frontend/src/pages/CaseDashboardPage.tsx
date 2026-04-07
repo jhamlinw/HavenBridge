@@ -35,7 +35,6 @@ export default function CaseDashboardPage() {
     await api.sessions.create({
       residentId: selected.residentId,
       sessionDate: new Date().toISOString().split('T')[0],
-      socialWorker: selected.assignedSocialWorker,
       ...sessionForm,
       progressNoted: false,
       concernsFlagged: false,

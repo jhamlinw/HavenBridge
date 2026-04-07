@@ -22,7 +22,7 @@ HavenBridge is a nonprofit platform that connects case workers and donors to imp
 | Search & filter on caseload | Done | Resident sidebar |
 | Add Session / Visit / Donation forms | Done | Modal forms |
 | CSV data importer (7,000+ rows) | Done | Startup import |
-| Real database (17 tables, SQLite) | Done | `havenbridge.db` |
+| Real database (19 tables, MySQL) | Done | `havenbridge` (MySQL) |
 | Sign out | Done | Nav bar |
 
 ---
@@ -31,8 +31,8 @@ HavenBridge is a nonprofit platform that connects case workers and donors to imp
 - **Backend:** ASP.NET Core 10 Web API
 - **Frontend:** React 19 + Vite + TypeScript
 - **Styling:** Tailwind CSS 4 with custom haven-* color palette
-- **Database:** SQLite via Entity Framework Core
-- **Data:** 17 CSV seed files (~7,000 rows) imported at startup
+- **Database:** MySQL via Entity Framework Core
+- **Data:** 19 CSV seed files (~7,000 rows) imported at startup
 
 ---
 

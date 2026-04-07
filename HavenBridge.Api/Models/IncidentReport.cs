@@ -46,9 +46,15 @@ public class IncidentReport
     [Column("follow_up_required")]
     public bool FollowUpRequired { get; set; }
 
+    [Column("user_id")]
+    public int? UserId { get; set; }
+
     [ForeignKey(nameof(ResidentId))]
     public Resident? Resident { get; set; }
 
     [ForeignKey(nameof(SafehouseId))]
     public Safehouse? Safehouse { get; set; }
+
+    [ForeignKey(nameof(UserId))]
+    public User? User { get; set; }
 }

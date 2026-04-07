@@ -10,12 +10,16 @@ public static class CsvDataImporter
     {
         if (await db.Safehouses.AnyAsync()) return;
 
+        await ImportRoles(db, Path.Combine(seedFolder, "roles.csv"));
         await ImportSafehouses(db, Path.Combine(seedFolder, "safehouses.csv"));
         await ImportPartners(db, Path.Combine(seedFolder, "partners.csv"));
         await ImportSupporters(db, Path.Combine(seedFolder, "supporters.csv"));
-        await ImportResidents(db, Path.Combine(seedFolder, "residents.csv"));
         await db.SaveChangesAsync();
 
+        await ImportUsers(db, Path.Combine(seedFolder, "users.csv"));
+        await db.SaveChangesAsync();
+
+        await ImportResidents(db, Path.Combine(seedFolder, "residents.csv"));
         await ImportDonations(db, Path.Combine(seedFolder, "donations.csv"));
         await db.SaveChangesAsync();
 
@@ -64,6 +68,32 @@ public static class CsvDataImporter
     private static DateOnly ParseDate(string s) => DateOnly.TryParse(s, out var v) ? v : DateOnly.FromDateTime(DateTime.UtcNow);
     private static DateTime ParseDateTime(string s) => DateTime.TryParse(s, out var v) ? DateTime.SpecifyKind(v, DateTimeKind.Utc) : DateTime.UtcNow;
     private static DateTime? ParseDateTimeNull(string s) => DateTime.TryParse(s, out var v) ? DateTime.SpecifyKind(v, DateTimeKind.Utc) : null;
+
+    private static async Task ImportRoles(HavenBridgeContext db, string path)
+    {
+        foreach (var f in (await File.ReadAllLinesAsync(path)).Skip(1).Where(l => !string.IsNullOrWhiteSpace(l)).Select(ParseCsvLine))
+        {
+            db.Roles.Add(new Role
+            {
+                RoleId = ParseInt(f[0]), Description = f[1]
+            });
+        }
+    }
+
+    private static async Task ImportUsers(HavenBridgeContext db, string path)
+    {
+        foreach (var f in (await File.ReadAllLinesAsync(path)).Skip(1).Where(l => !string.IsNullOrWhiteSpace(l)).Select(ParseCsvLine))
+        {
+            db.Users.Add(new User
+            {
+                UserId = ParseInt(f[0]), RoleId = ParseInt(f[1]),
+                SupporterId = ParseIntNull(f[2]),
+                Username = f[3], PasswordHash = f[4],
+                UserFirstName = NullIfEmpty(f[5]), UserLastName = NullIfEmpty(f[6]),
+                IsSocialWorker = ParseBool(f[7])
+            });
+        }
+    }
 
     private static async Task ImportSafehouses(HavenBridgeContext db, string path)
     {
@@ -212,7 +242,7 @@ public static class CsvDataImporter
             db.ProcessRecordings.Add(new ProcessRecording
             {
                 RecordingId = ParseInt(f[0]), ResidentId = ParseInt(f[1]), SessionDate = ParseDate(f[2]),
-                SocialWorker = NullIfEmpty(f[3]), SessionType = NullIfEmpty(f[4]),
+                SocialWorkerId = ParseIntNull(f[3]), SessionType = NullIfEmpty(f[4]),
                 SessionDurationMinutes = ParseInt(f[5]),
                 EmotionalStateObserved = NullIfEmpty(f[6]), EmotionalStateEnd = NullIfEmpty(f[7]),
                 SessionNarrative = NullIfEmpty(f[8]), InterventionsApplied = NullIfEmpty(f[9]),
@@ -283,7 +313,8 @@ public static class CsvDataImporter
                 Severity = NullIfEmpty(f[5]), Description = NullIfEmpty(f[6]),
                 ResponseTaken = NullIfEmpty(f[7]), Resolved = ParseBool(f[8]),
                 ResolutionDate = ParseDateNull(f[9]), ReportedBy = NullIfEmpty(f[10]),
-                FollowUpRequired = ParseBool(f[11])
+                FollowUpRequired = ParseBool(f[11]),
+                UserId = f.Length > 12 ? ParseIntNull(f[12]) : null
             });
         }
     }

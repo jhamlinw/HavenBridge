@@ -1,6 +1,6 @@
 # HavenBridge
 
-A nonprofit platform connecting case workers and donors to improve outcomes for vulnerable children in the Philippines. Built with **ASP.NET Core 10**, **React + TypeScript**, **Tailwind CSS**, and **SQLite**.
+A nonprofit platform connecting case workers and donors to improve outcomes for vulnerable children in the Philippines. Built with **ASP.NET Core 10**, **React + TypeScript**, **Tailwind CSS**, and **MySQL**.
 
 ---
 
@@ -48,7 +48,7 @@ npm install   # only needed first time
 npm run dev
 ```
 
-On first run, the SQLite database is auto-created and populated from 17 CSV seed files (~7,000 rows of real data).
+On first run, the MySQL database is auto-created and populated from 17 CSV seed files (~7,000 rows of real data).
 
 ### Access the App
 
@@ -80,8 +80,8 @@ HavenBridge/
 │   │   ├── SafehousesController.cs
 │   │   └── SupportersController.cs  #   Supporter CRUD & summary
 │   ├── Data/
-│   │   ├── HavenBridgeContext.cs    # EF Core DbContext (17 tables)
-│   │   └── CsvDataImporter.cs      # Startup CSV → SQLite importer
+│   │   ├── HavenBridgeContext.cs    # EF Core DbContext (19 tables)
+│   │   └── CsvDataImporter.cs      # Startup CSV → MySQL importer
 │   ├── Models/                      # Entity models (one per table)
 │   ├── SeedData/                    # 17 CSV files with real data
 │   ├── Properties/
@@ -189,7 +189,7 @@ HavenBridge/
 
 ## Data Model
 
-17 tables modeled after the full ERD (see `docs/SPEC.md`):
+19 tables modeled after the full ERD (see `docs/SPEC.md`):
 
 | Domain | Tables |
 |--------|--------|
@@ -197,6 +197,7 @@ HavenBridge/
 | **Case Management** | Residents, Process Recordings, Intervention Plans, Home Visitations, Health & Wellbeing Records, Education Records, Incident Reports |
 | **Fundraising** | Supporters, Donations, Donation Allocations, In-Kind Donation Items |
 | **Partnerships** | Partners, Partner Assignments |
+| **Authentication** | Users, Roles |
 | **Outreach** | Social Media Posts, Public Impact Snapshots |
 
 Seed data: **7,000+ rows** imported from CSV at startup.
