@@ -11,6 +11,7 @@ import AdminPortalPage from './pages/AdminPortalPage';
 import DonorPortalPage from './pages/DonorPortalPage';
 import ReportsPage from './pages/ReportsPage';
 import CookieConsent from './components/CookieConsent';
+import { ResidentIntakePage } from './pages/ResidentIntakePage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const isAuth = localStorage.getItem('hb_auth') === 'staff';
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="admin" element={<AdminPortalPage />} />
           <Route path="donor-portal" element={<DonorPortalPage />} />
+          <Route path="/cases/new" element={<ResidentIntakePage />} />
         </Route>
       </Routes>
       <CookieConsent />
