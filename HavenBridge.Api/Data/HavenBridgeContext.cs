@@ -31,8 +31,8 @@ public class HavenBridgeContext : DbContext
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
-        // "Whenever you see a 'bool' in ANY of my C# models, map it to a 'byte' in the database."
-        configurationBuilder.Properties<bool>().HaveConversion<byte>();
+        // "Whenever you see a 'byte' in ANY of my C# models, map it to a 'bool' in the database."
+        configurationBuilder.Properties<byte>().HaveConversion<bool>();
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': 'http://localhost:5149',
+      '/api': 'https://intex-backend-one-two-b8chggdma6buaee7.francecentral-01.azurewebsites.net',
     },
   },
 })
