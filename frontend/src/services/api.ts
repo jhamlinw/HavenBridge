@@ -26,7 +26,9 @@ export const api = {
     register: (data: { username: string; password: string; firstName?: string; lastName?: string }) =>
       request<{ token: string; user: any }>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
     login: (data: { username: string; password: string }) =>
-      request<{ token: string; user: any }>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+      request<{ token: string; needPasswordReset: boolean; user: any }>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+    changePassword: (data: { currentPassword: string; newPassword: string }) =>
+      request<{ message: string }>('/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
     me: () => request<any>('/auth/me'),
   },
   residents: {
@@ -68,5 +70,7 @@ export const api = {
     users: () => request<any[]>('/admin/users'),
     updateRole: (userId: number, roleId: number) =>
       request<any>(`/admin/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ roleId }) }),
+    setPasswordReset: (userId: number, needPasswordReset: boolean) =>
+      request<any>(`/admin/users/${userId}/require-password-reset`, { method: 'PUT', body: JSON.stringify({ needPasswordReset }) }),
   },
 };

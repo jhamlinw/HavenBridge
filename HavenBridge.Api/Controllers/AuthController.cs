@@ -25,6 +25,7 @@ public class AuthController : ControllerBase
 
     public record RegisterRequest(string Username, string Password, string? FirstName, string? LastName);
     public record LoginRequest(string Username, string Password);
+    public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
     [HttpPost("register")]
     public async Task<ActionResult> Register([FromBody] RegisterRequest req)
@@ -74,8 +75,32 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             token,
+            needPasswordReset = user.NeedPasswordReset,
             user = new { user.UserId, user.Username, user.UserFirstName, user.UserLastName, role = user.Role.Description }
         });
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        var user = await _db.Users.FindAsync(int.Parse(userIdClaim));
+        if (user == null) return NotFound();
+
+        if (!BCrypt.Net.BCrypt.Verify(req.CurrentPassword, user.PasswordHash))
+            return BadRequest(new { message = "Current password is incorrect." });
+
+        if (req.NewPassword.Length < 6)
+            return BadRequest(new { message = "New password must be at least 6 characters." });
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+        user.NeedPasswordReset = false;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Password changed successfully." });
     }
 
     [Authorize]

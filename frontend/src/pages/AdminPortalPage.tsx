@@ -23,6 +23,7 @@ interface ManagedUser {
   userLastName: string | null;
   roleId: number;
   role: string;
+  needPasswordReset: boolean;
 }
 
 const ROLE_OPTIONS = [
@@ -43,6 +44,7 @@ export default function AdminPortalPage() {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [roleUpdating, setRoleUpdating] = useState<number | null>(null);
+  const [resetUpdating, setResetUpdating] = useState<number | null>(null);
 
   useEffect(() => {
     api.admin.recentActivity()
@@ -77,6 +79,23 @@ export default function AdminPortalPage() {
       alert(err.message || 'Failed to update role.');
     } finally {
       setRoleUpdating(null);
+    }
+  };
+
+  const handleTogglePasswordReset = async (userId: number, current: boolean) => {
+    const user = users.find(u => u.userId === userId);
+    if (!user) return;
+    const action = current ? 'clear the password reset requirement for' : 'require a password reset for';
+    if (!confirm(`${action} ${user.username}?`)) return;
+
+    setResetUpdating(userId);
+    try {
+      await api.admin.setPasswordReset(userId, !current);
+      setUsers(prev => prev.map(u => u.userId === userId ? { ...u, needPasswordReset: !current } : u));
+    } catch (err: any) {
+      alert(err.message || 'Failed to update password reset flag.');
+    } finally {
+      setResetUpdating(null);
     }
   };
 
@@ -215,6 +234,7 @@ export default function AdminPortalPage() {
                   <th className="px-6 py-3">Name</th>
                   <th className="px-6 py-3">Current Role</th>
                   <th className="px-6 py-3">Change Role</th>
+                  <th className="px-6 py-3">Password Reset</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -244,6 +264,19 @@ export default function AdminPortalPage() {
                           <option key={r.id} value={r.id}>{r.label}</option>
                         ))}
                       </select>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        disabled={resetUpdating === u.userId}
+                        onClick={() => handleTogglePasswordReset(u.userId, u.needPasswordReset)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 ${
+                          u.needPasswordReset
+                            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {u.needPasswordReset ? 'Reset Pending' : 'Require Reset'}
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -80,7 +80,8 @@ public class AdminController : ControllerBase
                 u.UserFirstName,
                 u.UserLastName,
                 u.RoleId,
-                Role = u.Role!.Description
+                Role = u.Role!.Description,
+                u.NeedPasswordReset
             })
             .ToListAsync();
 
@@ -88,6 +89,19 @@ public class AdminController : ControllerBase
     }
 
     public record UpdateRoleRequest(int RoleId);
+    public record SetPasswordResetRequest(bool NeedPasswordReset);
+
+    [HttpPut("users/{id}/require-password-reset")]
+    public async Task<ActionResult> SetPasswordReset(int id, [FromBody] SetPasswordResetRequest req)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user == null) return NotFound(new { message = "User not found." });
+
+        user.NeedPasswordReset = req.NeedPasswordReset;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = req.NeedPasswordReset ? "User must reset password on next login." : "Password reset flag cleared." });
+    }
 
     [HttpPut("users/{id}/role")]
     public async Task<ActionResult> UpdateUserRole(int id, [FromBody] UpdateRoleRequest req)

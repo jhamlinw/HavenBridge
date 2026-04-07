@@ -35,6 +35,9 @@ public class User
     [Column("is_social_worker")]
     public bool IsSocialWorker { get; set; }
 
+    [Column("need_password_reset")]
+    public bool NeedPasswordReset { get; set; }
+
     [ForeignKey(nameof(RoleId))]
     public Role? Role { get; set; }
 
