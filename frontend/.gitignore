@@ -26,3 +26,5 @@ dist-ssr
 # personal auth for MySQL
 
 *appsettings.json
+
+.env*
