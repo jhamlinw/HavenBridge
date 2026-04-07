@@ -1,7 +1,18 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { saveToken, parseToken } from '../services/auth';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
+
+const PW_RULES = [
+  { key: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
+  { key: 'upper', label: 'One uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
+  { key: 'lower', label: 'One lowercase letter', test: (p: string) => /[a-z]/.test(p) },
+  { key: 'number', label: 'One number', test: (p: string) => /\d/.test(p) },
+  { key: 'special', label: 'One special character (!@#$…)', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+] as const;
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -16,6 +27,11 @@ export default function LoginPage() {
   const [resetError, setResetError] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [currentPasswordForReset, setCurrentPasswordForReset] = useState('');
+
+  const resetChecks = useMemo(() => PW_RULES.map(r => ({ ...r, pass: r.test(newPassword) })), [newPassword]);
+  const resetAllPassed = resetChecks.every(c => c.pass);
+  const resetStrength = resetChecks.filter(c => c.pass).length;
+  const resetStrengthColor = resetStrength <= 1 ? 'bg-red-400' : resetStrength <= 3 ? 'bg-amber-400' : 'bg-emerald-500';
 
   const navigateByRole = () => {
     const payload = parseToken();
@@ -57,8 +73,8 @@ export default function LoginPage() {
     e.preventDefault();
     setResetError('');
 
-    if (newPassword.length < 6) {
-      setResetError('New password must be at least 6 characters.');
+    if (!resetAllPassed) {
+      setResetError('New password does not meet all requirements.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -79,54 +95,60 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 py-12">
-      <div className="absolute inset-0 bg-gradient-to-br from-haven-50 via-white to-gray-100" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-haven-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-haven-200/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
+    <div className="min-h-screen flex flex-col">
+      <PublicNav />
 
-      <div className="relative w-full max-w-md">
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 sm:p-10">
-          <div className="flex flex-col items-center mb-8">
-            <div className="h-16 w-16 mb-5 rounded-2xl bg-gradient-to-br from-haven-50 to-haven-100 flex items-center justify-center shadow-sm">
-              <img src="/favicon.svg" alt="HavenBridge" className="h-10 w-10" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
-            <p className="text-sm text-gray-500 mt-1.5">Sign in to your HavenBridge account</p>
-          </div>
+      <div className="flex-1 relative flex items-center justify-center px-4 py-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-haven-50 via-white to-gray-100" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-haven-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-haven-200/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
 
-          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-            {error && (
-              <div className="rounded-xl bg-red-50 border border-red-100 text-red-800 text-sm px-4 py-3" role="alert">
-                {error}
+        <div className="relative w-full max-w-md">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 sm:p-10">
+            <div className="flex flex-col items-center mb-8">
+              <div className="h-16 w-16 mb-5 rounded-2xl bg-gradient-to-br from-haven-50 to-haven-100 flex items-center justify-center shadow-sm">
+                <img src="/favicon.svg" alt="HavenBridge" className="h-10 w-10" />
               </div>
-            )}
-
-            <div>
-              <label htmlFor="login-username" className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
-              <input id="login-username" type="text" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 shadow-sm focus:border-haven-500 focus:ring-2 focus:ring-haven-500/20 focus:bg-white outline-none transition-all" />
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
+              <p className="text-sm text-gray-500 mt-1.5">Sign in to your HavenBridge account</p>
             </div>
 
-            <div>
-              <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <input id="login-password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 shadow-sm focus:border-haven-500 focus:ring-2 focus:ring-haven-500/20 focus:bg-white outline-none transition-all" />
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {error && (
+                <div className="rounded-xl bg-red-50 border border-red-100 text-red-800 text-sm px-4 py-3" role="alert">
+                  {error}
+                </div>
+              )}
 
-            <button type="submit" disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-haven-600 to-haven-700 text-white font-semibold py-3 px-4 hover:from-haven-700 hover:to-haven-800 focus:outline-none focus:ring-2 focus:ring-haven-500 focus:ring-offset-2 shadow-sm hover:shadow-md transition-all disabled:opacity-60">
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
+              <div>
+                <label htmlFor="login-username" className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                <input id="login-username" type="text" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 shadow-sm focus:border-haven-500 focus:ring-2 focus:ring-haven-500/20 focus:bg-white outline-none transition-all" />
+              </div>
 
-          <p className="mt-8 text-center text-sm text-gray-500">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-haven-600 hover:text-haven-700 font-medium transition-colors">Sign up</Link>
-            {' '}&middot;{' '}
-            <Link to="/welcome" className="text-haven-600 hover:text-haven-700 font-medium transition-colors">Back to home</Link>
-          </p>
+              <div>
+                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <input id="login-password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 shadow-sm focus:border-haven-500 focus:ring-2 focus:ring-haven-500/20 focus:bg-white outline-none transition-all" />
+              </div>
+
+              <button type="submit" disabled={loading}
+                className="w-full rounded-xl bg-gradient-to-r from-haven-600 to-haven-700 text-white font-semibold py-3 px-4 hover:from-haven-700 hover:to-haven-800 focus:outline-none focus:ring-2 focus:ring-haven-500 focus:ring-offset-2 shadow-sm hover:shadow-md transition-all disabled:opacity-60">
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
+
+            <p className="mt-8 text-center text-sm text-gray-500">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-haven-600 hover:text-haven-700 font-medium transition-colors">Sign up</Link>
+              {' '}&middot;{' '}
+              <Link to="/welcome" className="text-haven-600 hover:text-haven-700 font-medium transition-colors">Back to home</Link>
+            </p>
+          </div>
         </div>
       </div>
+
+      <PublicFooter />
 
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
@@ -152,6 +174,23 @@ export default function LoginPage() {
                 <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
                 <input id="new-password" type="password" autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
                   className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 shadow-sm focus:border-haven-500 focus:ring-2 focus:ring-haven-500/20 focus:bg-white outline-none transition-all" />
+                {newPassword.length > 0 && (
+                  <div className="mt-2.5 space-y-2">
+                    <div className="flex gap-1 h-1.5 rounded-full overflow-hidden bg-gray-100">
+                      {PW_RULES.map((_, i) => (
+                        <div key={i} className={`flex-1 rounded-full transition-colors ${i < resetStrength ? resetStrengthColor : 'bg-gray-200'}`} />
+                      ))}
+                    </div>
+                    <ul className="space-y-0.5">
+                      {resetChecks.map(c => (
+                        <li key={c.key} className={`flex items-center gap-1.5 text-xs ${c.pass ? 'text-emerald-600' : 'text-gray-400'}`}>
+                          {c.pass ? <CheckCircleIcon className="h-3.5 w-3.5" /> : <XCircleIcon className="h-3.5 w-3.5" />}
+                          {c.label}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
               <div>

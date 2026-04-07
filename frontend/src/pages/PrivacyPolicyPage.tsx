@@ -1,22 +1,14 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeftIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 const LAST_UPDATED = 'April 6, 2026';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Compact nav bar */}
-      <header className="border-b border-gray-100 bg-white/80 backdrop-blur-md">
-        <div className="max-w-3xl mx-auto flex items-center gap-3 px-6 py-4">
-          <Link to="/welcome" className="flex items-center gap-2">
-            <img src="/favicon.svg" alt="HavenBridge" className="h-8 w-8" />
-            <span className="text-lg font-bold text-gray-900 tracking-tight">
-              Haven<span className="text-haven-600">Bridge</span>
-            </span>
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
+      <PublicNav />
 
       <div className="mx-auto max-w-3xl px-6 py-10 sm:py-14">
         <Link
@@ -125,6 +117,8 @@ export default function PrivacyPolicyPage() {
           </p>
         </article>
       </div>
+
+      <PublicFooter />
     </div>
   );
 }

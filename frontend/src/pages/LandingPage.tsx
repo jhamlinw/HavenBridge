@@ -36,8 +36,14 @@ export default function LandingPage() {
               Privacy
             </Link>
             <Link
+              to="/register"
+              className="ml-2 inline-flex items-center rounded-lg border border-white/25 bg-white/10 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+            >
+              Register
+            </Link>
+            <Link
               to="/login"
-              className="ml-2 inline-flex items-center rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 px-4 py-2 text-sm font-semibold text-white hover:bg-white/25 transition-colors"
+              className="inline-flex items-center rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 px-4 py-2 text-sm font-semibold text-white hover:bg-white/25 transition-colors"
             >
               Sign In
             </Link>
@@ -69,17 +75,17 @@ export default function LandingPage() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
-              to="/impact"
+              to="/register"
               className="group inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-base font-semibold text-haven-800 shadow-xl hover:bg-haven-50 transition-all hover:shadow-2xl"
             >
-              See Our Impact
+              Become a Supporter
               <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <Link
-              to="/login"
+              to="/impact"
               className="inline-flex items-center rounded-xl border-2 border-white/60 bg-white/10 backdrop-blur-sm px-7 py-3.5 text-base font-semibold text-white hover:bg-white/20 hover:border-white/80 transition-all"
             >
-              Sign In
+              See Our Impact
             </Link>
           </div>
         </div>
@@ -143,10 +149,10 @@ export default function LandingPage() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
-              to="/impact"
+              to="/register"
               className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-haven-800 hover:bg-haven-50 transition-colors shadow-md"
             >
-              View Impact Data
+              Register as a Donor
             </Link>
             <Link
               to="/login"
@@ -168,6 +174,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-6 text-sm text-gray-500">
             <Link to="/impact" className="hover:text-gray-900 transition-colors">Impact</Link>
             <Link to="/privacy" className="hover:text-gray-900 transition-colors">Privacy</Link>
+            <Link to="/register" className="hover:text-gray-900 transition-colors">Register</Link>
             <Link to="/login" className="hover:text-gray-900 transition-colors">Sign In</Link>
           </div>
           <p className="text-xs text-gray-400">

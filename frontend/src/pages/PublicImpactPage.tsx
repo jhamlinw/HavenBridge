@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import SummaryCard from '../components/SummaryCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 import type { ImpactOverview, PublicImpactSnapshot } from '../types/models';
 import {
   UserGroupIcon,
@@ -47,15 +49,17 @@ export default function PublicImpactPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-haven-50 to-white">
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-haven-50 to-white">
+        <PublicNav />
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-haven-50 via-white to-gray-50">
-      {/* Header */}
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-haven-50 via-white to-gray-50">
+      <PublicNav />
+
       <header className="relative overflow-hidden border-b border-haven-100/60">
         <div className="absolute inset-0 bg-gradient-to-br from-haven-600/5 to-transparent" />
         <div className="relative mx-auto max-w-5xl px-6 py-10 sm:py-14">
@@ -163,9 +167,7 @@ export default function PublicImpactPage() {
         </section>
       </main>
 
-      <footer className="border-t border-gray-100 py-10 text-center text-sm text-gray-500">
-        <p className="font-medium text-gray-700">HavenBridge</p>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
