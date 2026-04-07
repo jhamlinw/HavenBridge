@@ -1,4 +1,5 @@
 import { getToken } from './auth';
+import type { User } from '../types/models';
 
 const BASE = '/api';
 
@@ -72,5 +73,8 @@ export const api = {
       request<any>(`/admin/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ roleId }) }),
     setPasswordReset: (userId: number, needPasswordReset: boolean) =>
       request<any>(`/admin/users/${userId}/require-password-reset`, { method: 'PUT', body: JSON.stringify({ needPasswordReset }) }),
+  },
+  users: {
+  list: () => request<User[]>('/users'), 
   },
 };
