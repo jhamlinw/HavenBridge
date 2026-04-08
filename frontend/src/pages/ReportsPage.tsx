@@ -150,6 +150,47 @@ function getSimpleMlSummary(pipeline: MlPipelineSummary): MlDisplaySummary {
   };
 }
 
+function getAdminActions(pipelineId: string): string[] {
+  const actions: Record<string, string[]> = {
+    'social-media-donation-predictor': [
+      'Prioritize content types that historically convert to donations.',
+      'Increase posting budget for high-performing campaigns and reduce spend on low-performing ones.',
+      'Use weekly reviews to replicate posts with the strongest donation outcomes.',
+    ],
+    'donor-churn': [
+      'Contact at-risk donors first with personalized follow-up within 7 days.',
+      'Launch retention campaigns (thank-you updates, impact stories, reminders) before donors lapse.',
+      'Track recovered donors monthly to improve outreach strategy over time.',
+    ],
+    'reintegration-readiness': [
+      'Use readiness status to schedule case reviews and discharge planning checkpoints.',
+      'Focus support services on residents flagged as not yet ready before transition decisions.',
+      'Require supervisor approval for discharges when readiness confidence is low.',
+    ],
+    'resident-risk-classifier': [
+      'Move high-risk residents to the top of caseworker follow-up queues.',
+      'Assign additional counseling and home visit frequency for highest-risk profiles.',
+      'Review risk changes weekly so interventions can be adjusted early.',
+    ],
+    'intervention-effectiveness': [
+      'Prioritize intervention plans with the strongest observed progress outcomes.',
+      'Phase out low-impact interventions unless required for compliance reasons.',
+      'Standardize successful interventions across safehouses with staff training.',
+    ],
+    'donor-lifetime-value': [
+      'Prioritize relationship-building for donors with highest long-term value potential.',
+      'Offer tailored engagement plans (updates, events, stewardship) by donor value tier.',
+      'Shift acquisition budget toward channels that bring in the most valuable donors.',
+    ],
+  };
+
+  return actions[pipelineId] ?? [
+    'Use this model as a decision-support signal during weekly admin planning.',
+    'Prioritize follow-up actions on the highest-risk or highest-opportunity cases first.',
+    'Review outcomes monthly and update operating playbooks based on results.',
+  ];
+}
+
 export default function ReportsPage() {
   const [overview, setOverview] = useState<ImpactOverview | null>(null);
   const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
@@ -317,27 +358,18 @@ export default function ReportsPage() {
                           </div>
                         </div>
                       </div>
+                
+                <div className="mt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Recommended actions for admins</p>
+                  <ul className="mt-2 space-y-1 text-sm text-gray-700">
+                    {getAdminActions(pipeline.id).map((action) => (
+                      <li key={action}>- {action}</li>
+                    ))}
+                  </ul>
+                </div>
                     </>
                   );
                 })()}
-
-                <div className="mt-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Key Metrics</p>
-                  <ul className="mt-2 space-y-1 text-sm text-gray-700">
-                    {pipeline.keyMetrics.map((metric) => (
-                      <li key={metric}>- {metric}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Insights</p>
-                  <ul className="mt-2 space-y-1 text-sm text-gray-700">
-                    {pipeline.insights.map((insight) => (
-                      <li key={insight}>- {insight}</li>
-                    ))}
-                  </ul>
-                </div>
               </article>
             ))}
           </div>
