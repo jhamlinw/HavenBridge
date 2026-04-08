@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-haven-50: #f0f7ff;
-  --color-haven-100: #e0effe;
-  --color-haven-200: #b9dffc;
-  --color-haven-300: #7cc4fa;
-  --color-haven-400: #36a6f5;
-  --color-haven-500: #0c8ce6;
-  --color-haven-600: #006ec4;
-  --color-haven-700: #01589f;
-  --color-haven-800: #064b83;
-  --color-haven-900: #0b3f6d;
-  --color-haven-950: #072849;
+  --color-haven-50: #fff4fb;
+  --color-haven-100: #ffe8f6;
+  --color-haven-200: #ffd0ec;
+  --color-haven-300: #ffaddd;
+  --color-haven-400: #fb7dc6;
+  --color-haven-500: #ef4ea9;
+  --color-haven-600: #da2d92;
+  --color-haven-700: #b71f78;
+  --color-haven-800: #971d63;
+  --color-haven-900: #7b1d53;
+  --color-haven-950: #4d0b31;
 
   --color-warm-50: #fdf8f0;
   --color-warm-100: #f9eddb;
@@ -27,5 +27,10 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply bg-rose-50/40 text-gray-900 antialiased;
+}
+
+::selection {
+  background: #ffd0ec;
+  color: #4d0b31;
 }
