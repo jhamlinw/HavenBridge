@@ -163,28 +163,27 @@ export default function AdminPortalPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-10">
+    <main className="max-w-[1200px] mx-auto px-6 py-10" aria-label="Admin Dashboard">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h1>
+        <h1 id="admin-heading" className="text-3xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h1>
         <p className="text-gray-500 mt-2 text-base">High-level overview and system administration.</p>
       </div>
 
-      {/* Metrics Overview */}
       {overview && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        <section aria-label="System metrics" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           <SummaryCard title="Active Residents" value={overview.totalResidents} icon={<UserGroupIcon className="h-7 w-7" />} />
           <SummaryCard title="Counseling Sessions" value={overview.totalSessions.toLocaleString()} icon={<ChatBubbleLeftRightIcon className="h-7 w-7" />} accent="border-warm-500" />
           <SummaryCard title="Total Donations" value={`$${overview.totalDonations.toLocaleString()}`} icon={<CurrencyDollarIcon className="h-7 w-7" />} accent="border-emerald-500" />
           <SummaryCard title="Active Safehouses" value={overview.activeSafehouses} icon={<BuildingOfficeIcon className="h-7 w-7" />} accent="border-violet-500" />
-        </div>
+        </section>
       )}
 
-      {/* Search */}
-      <div className="mb-10">
+      <section aria-label="Search residents and donors" className="mb-10">
         <div className="relative max-w-xl">
           <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
+            aria-label="Search residents or donors"
             placeholder="Search residents or donors..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
@@ -228,10 +227,9 @@ export default function AdminPortalPage() {
             )}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* User Management */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <section aria-label="User management" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
           <UsersIcon className="h-5 w-5 text-haven-600" />
           <div>
@@ -361,7 +359,7 @@ export default function AdminPortalPage() {
             </tbody>
           </table>
         )}
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

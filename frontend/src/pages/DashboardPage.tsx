@@ -53,23 +53,22 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 py-10">
+    <main className="max-w-[1600px] mx-auto px-6 py-10" aria-label="Staff Dashboard">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Staff Dashboard</h1>
+        <h1 id="dashboard-heading" className="text-3xl font-bold text-gray-900 tracking-tight">Staff Dashboard</h1>
         <p className="text-gray-500 mt-2 text-base">Command center for daily operations across all safehouses.</p>
       </div>
 
       {overview && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        <section aria-label="Summary statistics" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           <SummaryCard title="Active Residents" value={overview.totalResidents} icon={<UserGroupIcon className="h-7 w-7" />} />
           <SummaryCard title="Counseling Sessions" value={overview.totalSessions.toLocaleString()} icon={<ChatBubbleLeftRightIcon className="h-7 w-7" />} accent="border-warm-500" />
           <SummaryCard title="Total Donations" value={`$${overview.totalDonations.toLocaleString()}`} icon={<CurrencyDollarIcon className="h-7 w-7" />} accent="border-emerald-500" />
           <SummaryCard title="Active Safehouses" value={overview.activeSafehouses} icon={<BuildingOfficeIcon className="h-7 w-7" />} accent="border-violet-500" />
-        </div>
+        </section>
       )}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
+      <section aria-label="Quick actions" className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
         {quickActions.map(a => (
           <Link
             key={a.label}
@@ -80,11 +79,10 @@ export default function DashboardPage() {
             <span className="text-lg font-semibold">{a.label}</span>
           </Link>
         ))}
-      </div>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <section aria-label="Recent activity" className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-100">
             <h2 className="font-semibold text-gray-900 text-lg">Recent Activity</h2>
           </div>
@@ -102,10 +100,9 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Quick Links */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <nav aria-label="Quick navigation" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="font-semibold text-gray-900 text-lg mb-5">Quick Navigation</h2>
           <div className="space-y-3">
             {[
@@ -127,13 +124,11 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
-        </div>
+        </nav>
       </div>
 
-      {/* Upcoming Conferences & Safehouse Counts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Case Conferences */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <section aria-label="Upcoming case conferences" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
             <CalendarDaysIcon className="h-5 w-5 text-haven-600" />
             <h2 className="font-semibold text-gray-900 text-lg">Upcoming Case Conferences</h2>
@@ -158,10 +153,9 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* Per-Safehouse Resident Counts */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <section aria-label="Safehouse occupancy" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
             <BuildingOfficeIcon className="h-5 w-5 text-violet-600" />
             <h2 className="font-semibold text-gray-900 text-lg">Safehouse Occupancy</h2>
@@ -189,8 +183,8 @@ export default function DashboardPage() {
               <div className="px-6 py-10 text-center text-gray-400 text-sm">No safehouse data available.</div>
             )}
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

@@ -110,8 +110,7 @@ export default function DonorManagementPage() {
     s.donations?.length ? s.donations.sort((a, b) => b.donationDate.localeCompare(a.donationDate))[0].donationDate : '—';
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 py-10">
-      {/* Header */}
+    <main className="max-w-[1600px] mx-auto px-6 py-10" aria-label="Donor Management">
       <div className="mb-10 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Donor Management</h1>
@@ -122,19 +121,17 @@ export default function DonorManagementPage() {
         </button>
       </div>
 
-      {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        <section aria-label="Donor summary statistics" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           <SummaryCard title="Total Donors" value={summary.total} icon={<UserGroupIcon className="h-7 w-7" />} />
           <SummaryCard title="Active Donors" value={summary.active} icon={<UserIcon className="h-7 w-7" />} accent="border-emerald-500" />
           <SummaryCard title="At-Risk Donors" value={summary.atRisk} icon={<ExclamationCircleIcon className="h-7 w-7" />} accent="border-red-500" />
           <SummaryCard title="Avg Gift Size" value={`$${summary.avgGift.toLocaleString()}`} icon={<BanknotesIcon className="h-7 w-7" />} accent="border-warm-500" />
-        </div>
+        </section>
       )}
 
       <div className="flex gap-6">
-        {/* Donor Table */}
-        <div className="flex-1 min-w-0">
+        <section aria-label="Donor list" className="flex-1 min-w-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <table className="w-full">
               <thead>
@@ -170,10 +167,9 @@ export default function DonorManagementPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        {/* Detail Panel */}
-        <aside className="w-80 shrink-0">
+        <aside aria-label="Donor details" className="w-80 shrink-0">
           {!selected ? (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-400 text-sm">
               Select a donor to view details.
@@ -388,6 +384,6 @@ export default function DonorManagementPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </main>
   );
 }

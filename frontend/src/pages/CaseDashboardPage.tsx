@@ -138,15 +138,14 @@ export default function CaseDashboardPage() {
     : 0;
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 py-10">
-      {/* Header */}
+    <main className="max-w-[1600px] mx-auto px-6 py-10" aria-label="Resident Cases">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Resident Cases</h1>
+        <h1 id="cases-heading" className="text-3xl font-bold text-gray-900 tracking-tight">Resident Cases</h1>
         <p className="text-gray-500 mt-2 text-base">View and manage all resident cases, sessions, and records.</p>
       </div>
 
       <div className="flex gap-6">
-        <aside className="w-80 shrink-0">
+        <aside aria-label="Resident list" className="w-80 shrink-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 py-3.5 bg-gray-50/80 border-b border-gray-100">
               <div className="flex items-center justify-between mb-2.5">
@@ -157,6 +156,7 @@ export default function CaseDashboardPage() {
                 <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
+                  aria-label="Search residents"
                   placeholder="Search code, worker, category..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
@@ -376,7 +376,7 @@ export default function CaseDashboardPage() {
               {/* Tabs */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="border-b border-gray-100 px-6">
-                  <nav className="flex gap-6 -mb-px">
+                  <nav aria-label="Case record tabs" className="flex gap-6 -mb-px">
                     {tabs.map(t => (
                       <button
                         key={t.key}
@@ -593,8 +593,7 @@ export default function CaseDashboardPage() {
           )}
         </div>
 
-        {/* Right Sidebar — Alerts */}
-        <aside className="w-64 shrink-0">
+        <aside aria-label="Alerts" className="w-64 shrink-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 py-3.5 bg-gradient-to-r from-red-50 to-red-100/50 border-b border-red-100 flex items-center gap-2">
               <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
@@ -770,6 +769,6 @@ export default function CaseDashboardPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </main>
   );
 }

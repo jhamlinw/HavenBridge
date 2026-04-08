@@ -140,8 +140,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 py-10">
-      {/* Header */}
+    <main className="max-w-[1600px] mx-auto px-6 py-10" aria-label="Reports and Analytics">
       <div className="mb-10 flex items-start justify-between">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-haven-50 text-haven-600 shrink-0">
@@ -174,7 +173,7 @@ export default function ReportsPage() {
 
       {/* Charts Row 1: Donations & Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <section aria-label="Donation trends" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-1">Donation Trends</h2>
           <p className="text-sm text-gray-500 mb-5">Monthly donation totals</p>
           {donationTimeline.length > 0 ? (
@@ -192,7 +191,7 @@ export default function ReportsPage() {
           )}
         </section>
 
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <section aria-label="Sessions and home visits" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-1">Sessions & Home Visits</h2>
           <p className="text-sm text-gray-500 mb-5">Monthly case activity</p>
           {activityTimeline.length > 0 ? (
@@ -215,7 +214,7 @@ export default function ReportsPage() {
 
       {/* Charts Row 2: Pie/Donut Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <section aria-label="Risk distribution" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-1">Risk Distribution</h2>
           <p className="text-sm text-gray-500 mb-4">Active residents by risk level</p>
           {riskData.length > 0 ? (
@@ -232,7 +231,7 @@ export default function ReportsPage() {
           )}
         </section>
 
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <section aria-label="Case categories" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-1">Case Categories</h2>
           <p className="text-sm text-gray-500 mb-4">Active residents by category</p>
           {categoryData.length > 0 ? (
@@ -249,7 +248,7 @@ export default function ReportsPage() {
           )}
         </section>
 
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <section aria-label="Session types" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-1">Session Types</h2>
           <p className="text-sm text-gray-500 mb-4">All sessions by type</p>
           {sessionTypeData.length > 0 ? (
@@ -270,7 +269,7 @@ export default function ReportsPage() {
 
       {/* Charts Row 3: Education, Health, Reintegration */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <section aria-label="Education progress" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-1">Education Progress</h2>
           <p className="text-sm text-gray-500 mb-4">Records by completion status</p>
           {educationData.length > 0 ? (
@@ -287,7 +286,7 @@ export default function ReportsPage() {
           )}
         </section>
 
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <section aria-label="Health improvement" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-1">Health Improvement</h2>
           <p className="text-sm text-gray-500 mb-5">Average scores over time</p>
           {healthTimeline.length > 0 ? (
@@ -308,7 +307,7 @@ export default function ReportsPage() {
           )}
         </section>
 
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <section aria-label="Reintegration outcomes" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-1">Reintegration Outcomes</h2>
           <p className="text-sm text-gray-500 mb-4">Residents by reintegration status</p>
           {reintegrationData.length > 0 ? (
@@ -327,7 +326,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Safehouse Overview */}
-      <section className="mb-12">
+      <section aria-label="Safehouse overview" className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-5">Safehouse Overview</h2>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
@@ -385,7 +384,7 @@ export default function ReportsPage() {
 
       {/* Donor Overview */}
       {supporterSummary && (
-        <section className="mb-12">
+        <section aria-label="Donor overview" className="mb-12">
           <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-5 flex items-center gap-2">
             <HeartIcon className="h-6 w-6 text-warm-600" />
             Donor Overview
@@ -409,7 +408,7 @@ export default function ReportsPage() {
 
       {/* Active Alerts Summary */}
       {alerts && (
-        <section>
+        <section aria-label="Active alerts summary">
           <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-5 flex items-center gap-2">
             <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
             Active Alerts Summary
@@ -428,6 +427,6 @@ export default function ReportsPage() {
           </div>
         </section>
       )}
-    </div>
+    </main>
   );
 }
