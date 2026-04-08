@@ -36,10 +36,10 @@ public class Donation
     public string CurrencyCode { get; set; } = "PHP";
 
     [Column("amount")]
-    public float Amount { get; set; }
+    public double Amount { get; set; }
 
     [Column("estimated_value")]
-    public float? EstimatedValue { get; set; }
+    public double? EstimatedValue { get; set; }
 
     [Column("impact_unit")]
     [MaxLength(100)]

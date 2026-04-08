@@ -17,25 +17,25 @@ public class HealthWellbeingRecord
     public DateOnly RecordDate { get; set; }
 
     [Column("general_health_score")]
-    public float? GeneralHealthScore { get; set; }
+    public double? GeneralHealthScore { get; set; }
 
     [Column("nutrition_score")]
-    public float? NutritionScore { get; set; }
+    public double? NutritionScore { get; set; }
 
     [Column("sleep_quality_score")]
-    public float? SleepQualityScore { get; set; }
+    public double? SleepQualityScore { get; set; }
 
     [Column("energy_level_score")]
-    public float? EnergyLevelScore { get; set; }
+    public double? EnergyLevelScore { get; set; }
 
     [Column("height_cm")]
-    public float? HeightCm { get; set; }
+    public double? HeightCm { get; set; }
 
     [Column("weight_kg")]
-    public float? WeightKg { get; set; }
+    public double? WeightKg { get; set; }
 
     [Column("bmi")]
-    public float? Bmi { get; set; }
+    public double? Bmi { get; set; }
 
     [Column("medical_checkup_done")]
     public bool MedicalCheckupDone { get; set; }
