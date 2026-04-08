@@ -48,6 +48,12 @@ interface MlPipelineSummary {
   insights: string[];
 }
 
+interface MlDisplaySummary {
+  confidenceLabel: 'High' | 'Medium' | 'Early';
+  confidencePercent: number;
+  plainSummary: string;
+}
+
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const PIE_COLORS = ['#4f6d7a', '#c0d6df', '#db6d3c', '#dbc49c', '#8b5e3c', '#6b9080', '#a4c3b2', '#cce3de'];
@@ -71,6 +77,77 @@ function occupancyPercent(capacity: number, occupied: number): number {
 
 function monthLabel(y: number, m: number) {
   return `${MONTH_NAMES[m - 1]} ${String(y).slice(2)}`;
+}
+
+function parseAuc(metrics: string[]): number | null {
+  for (const metric of metrics) {
+    const match = metric.match(/AUC-ROC:\s*([0-9]*\.?[0-9]+)/i);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+function parseR2(metrics: string[]): number | null {
+  for (const metric of metrics) {
+    const match = metric.match(/R²(?:\s*Score)?(?:\s*:\s*|\s+)([0-9]*\.?[0-9]+)/i);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+function getSimpleMlSummary(pipeline: MlPipelineSummary): MlDisplaySummary {
+  const auc = parseAuc(pipeline.keyMetrics);
+  const r2 = parseR2(pipeline.keyMetrics);
+
+  if (auc !== null) {
+    if (auc >= 0.9) {
+      return {
+        confidenceLabel: 'High',
+        confidencePercent: Math.round(auc * 100),
+        plainSummary: 'This model is very reliable at separating high-risk vs low-risk cases and is safe to use for prioritization.',
+      };
+    }
+    if (auc >= 0.75) {
+      return {
+        confidenceLabel: 'Medium',
+        confidencePercent: Math.round(auc * 100),
+        plainSummary: 'This model is useful for guidance, but staff review is still important before making decisions.',
+      };
+    }
+    return {
+      confidenceLabel: 'Early',
+      confidencePercent: Math.round(auc * 100),
+      plainSummary: 'This model is still early-stage and should be used as a supporting signal only.',
+    };
+  }
+
+  if (r2 !== null) {
+    if (r2 >= 0.6) {
+      return {
+        confidenceLabel: 'High',
+        confidencePercent: Math.round(r2 * 100),
+        plainSummary: 'This forecast is reasonably strong and can help planning and resource decisions.',
+      };
+    }
+    if (r2 >= 0.4) {
+      return {
+        confidenceLabel: 'Medium',
+        confidencePercent: Math.round(r2 * 100),
+        plainSummary: 'This forecast is directionally helpful, but exact values may vary in real use.',
+      };
+    }
+    return {
+      confidenceLabel: 'Early',
+      confidencePercent: Math.round(r2 * 100),
+      plainSummary: 'This forecast should be treated as exploratory rather than a final decision source.',
+    };
+  }
+
+  return {
+    confidenceLabel: 'Medium',
+    confidencePercent: 60,
+    plainSummary: 'This model provides practical signals for staff, but should be combined with case context.',
+  };
 }
 
 export default function ReportsPage() {
@@ -201,8 +278,48 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {mlPipelines.map((pipeline) => (
               <article key={pipeline.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900">{pipeline.title}</h3>
-                <p className="text-sm text-gray-600 mt-2">{pipeline.objective}</p>
+                {(() => {
+                  const summary = getSimpleMlSummary(pipeline);
+                  const barColor =
+                    summary.confidenceLabel === 'High'
+                      ? 'bg-emerald-500'
+                      : summary.confidenceLabel === 'Medium'
+                        ? 'bg-amber-500'
+                        : 'bg-rose-500';
+                  const pillColor =
+                    summary.confidenceLabel === 'High'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : summary.confidenceLabel === 'Medium'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-rose-100 text-rose-700';
+
+                  return (
+                    <>
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-gray-900">{pipeline.title}</h3>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${pillColor}`}>
+                          {summary.confidenceLabel} Confidence
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-gray-600 mt-2">{pipeline.objective}</p>
+
+                      <div className="mt-4 rounded-xl bg-gray-50 border border-gray-100 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">What this means</p>
+                        <p className="text-sm text-gray-700 mt-2">{summary.plainSummary}</p>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                            <span>Model confidence</span>
+                            <span>{summary.confidencePercent}%</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+                            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${summary.confidencePercent}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
 
                 <div className="mt-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Key Metrics</p>
