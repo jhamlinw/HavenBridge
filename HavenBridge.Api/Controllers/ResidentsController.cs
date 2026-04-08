@@ -35,6 +35,7 @@ public class ResidentsController : ControllerBase
             .Include(r => r.HealthRecords.OrderByDescending(h => h.RecordDate))
             .Include(r => r.EducationRecords.OrderByDescending(e => e.RecordDate))
             .Include(r => r.IncidentReports.OrderByDescending(i => i.IncidentDate))
+            .AsSplitQuery()
             .FirstOrDefaultAsync(r => r.ResidentId == id);
 
         return resident is null ? NotFound() : Ok(resident);
