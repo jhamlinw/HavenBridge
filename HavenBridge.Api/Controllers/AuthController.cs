@@ -52,29 +52,11 @@ public class AuthController : ControllerBase
         if (exists)
             return Conflict(new { message = "Username is already taken." });
 
-        var displayName = string.Join(" ",
-            new[] { req.FirstName, req.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
-        if (string.IsNullOrWhiteSpace(displayName))
-            displayName = req.Username;
-
-        var supporter = new Supporter
-        {
-            SupporterType = "Individual",
-            DisplayName = displayName,
-            FirstName = req.FirstName,
-            LastName = req.LastName,
-            Status = "Active",
-            AcquisitionChannel = "Self-Registration",
-            FirstDonationDate = null,
-            CreatedAt = DateTime.UtcNow
-        };
-        _db.Supporters.Add(supporter);
-        await _db.SaveChangesAsync();
-
         var user = new User
         {
             RoleId = 3,
-            SupporterId = supporter.SupporterId,
+            SupporterId = null,
+            Supporter = null,
             Username = req.Username,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
             UserFirstName = req.FirstName,
