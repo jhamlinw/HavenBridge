@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SummaryCard from '../components/SummaryCard';
+import ConfirmDialog from '../components/ConfirmDialog';
+import Pagination from '../components/Pagination';
 import type { ImpactOverview } from '../types/models';
 import {
   MagnifyingGlassIcon,
@@ -43,6 +45,9 @@ export default function AdminPortalPage() {
   const [usersLoading] = useState(false);
   const [roleUpdating, setRoleUpdating] = useState<number | null>(null);
   const [resetUpdating, setResetUpdating] = useState<number | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: () => {} });
+  const [usersPage, setUsersPage] = useState(1);
+  const USERS_PAGE_SIZE = 15;
 
   useEffect(() => {
     Promise.all([api.impact.overview(), api.admin.users()])
@@ -56,39 +61,54 @@ export default function AdminPortalPage() {
     setSearchResults(results);
   };
 
-  const handleRoleChange = async (userId: number, newRoleId: number) => {
+  const handleRoleChange = (userId: number, newRoleId: number) => {
     const user = users.find(u => u.userId === userId);
     if (!user) return;
     const roleName = ROLE_OPTIONS.find(r => r.id === newRoleId)?.label;
-    if (!confirm(`Change ${user.username}'s role to ${roleName}?`)) return;
-
-    setRoleUpdating(userId);
-    try {
-      await api.admin.updateRole(userId, newRoleId);
-      setUsers(prev => prev.map(u => u.userId === userId ? { ...u, roleId: newRoleId, role: roleName! } : u));
-    } catch (err: any) {
-      alert(err.message || 'Failed to update role.');
-    } finally {
-      setRoleUpdating(null);
-    }
+    setConfirmDialog({
+      open: true,
+      title: 'Change User Role',
+      message: `Change ${user.username}'s role to ${roleName}?`,
+      onConfirm: async () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        setRoleUpdating(userId);
+        try {
+          await api.admin.updateRole(userId, newRoleId);
+          setUsers(prev => prev.map(u => u.userId === userId ? { ...u, roleId: newRoleId, role: roleName! } : u));
+        } catch (err: any) {
+          alert(err.message || 'Failed to update role.');
+        } finally {
+          setRoleUpdating(null);
+        }
+      },
+    });
   };
 
-  const handleTogglePasswordReset = async (userId: number, current: boolean) => {
+  const handleTogglePasswordReset = (userId: number, current: boolean) => {
     const user = users.find(u => u.userId === userId);
     if (!user) return;
-    const action = current ? 'clear the password reset requirement for' : 'require a password reset for';
-    if (!confirm(`${action} ${user.username}?`)) return;
-
-    setResetUpdating(userId);
-    try {
-      await api.admin.setPasswordReset(userId, !current);
-      setUsers(prev => prev.map(u => u.userId === userId ? { ...u, needPasswordReset: !current } : u));
-    } catch (err: any) {
-      alert(err.message || 'Failed to update password reset flag.');
-    } finally {
-      setResetUpdating(null);
-    }
+    const action = current ? 'Clear password reset requirement for' : 'Require a password reset for';
+    setConfirmDialog({
+      open: true,
+      title: 'Password Reset',
+      message: `${action} ${user.username}?`,
+      onConfirm: async () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        setResetUpdating(userId);
+        try {
+          await api.admin.setPasswordReset(userId, !current);
+          setUsers(prev => prev.map(u => u.userId === userId ? { ...u, needPasswordReset: !current } : u));
+        } catch (err: any) {
+          alert(err.message || 'Failed to update password reset flag.');
+        } finally {
+          setResetUpdating(null);
+        }
+      },
+    });
   };
+
+  const pagedUsers = users.slice((usersPage - 1) * USERS_PAGE_SIZE, usersPage * USERS_PAGE_SIZE);
+  const usersTotalPages = Math.ceil(users.length / USERS_PAGE_SIZE);
 
   if (loading) return <LoadingSpinner />;
 
@@ -184,7 +204,7 @@ export default function AdminPortalPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {users.map(u => (
+              {pagedUsers.map(u => (
                 <tr key={u.userId} className="hover:bg-gray-50/60 transition-colors">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{u.username}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">
@@ -229,7 +249,19 @@ export default function AdminPortalPage() {
             </tbody>
           </table>
         )}
+        <div className="px-6 pb-4">
+          <Pagination currentPage={usersPage} totalPages={usersTotalPages} onPageChange={setUsersPage} />
+        </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(d => ({ ...d, open: false }))}
+        danger={false}
+      />
     </div>
   );
 }

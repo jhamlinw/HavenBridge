@@ -85,6 +85,27 @@ public class SupportersController : ControllerBase
         return Ok(supporter);
     }
 
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var supporter = await _db.Supporters.FindAsync(id);
+        if (supporter is null) return NotFound();
+
+        var hasLinkedUser = await _db.Users.AnyAsync(u => u.SupporterId == id);
+        if (hasLinkedUser)
+            return BadRequest(new { message = "Cannot delete a supporter who has a linked user account. Remove the user account first." });
+
+        var donationIds = await _db.Donations.Where(d => d.SupporterId == id).Select(d => d.DonationId).ToListAsync();
+        _db.DonationAllocations.RemoveRange(_db.DonationAllocations.Where(a => donationIds.Contains(a.DonationId)));
+        _db.InKindDonationItems.RemoveRange(_db.InKindDonationItems.Where(i => donationIds.Contains(i.DonationId)));
+        _db.Donations.RemoveRange(_db.Donations.Where(d => d.SupporterId == id));
+        _db.Supporters.Remove(supporter);
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     [HttpGet("summary")]
     public async Task<ActionResult> GetSummary()
     {

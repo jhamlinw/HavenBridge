@@ -4,6 +4,8 @@ import SummaryCard from '../components/SummaryCard';
 import StatusBadge from '../components/StatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
+import Pagination from '../components/Pagination';
 import type { Supporter, SupporterSummary, DonorImpact } from '../types/models';
 import {
   UserGroupIcon,
@@ -12,6 +14,7 @@ import {
   BanknotesIcon,
   PlusIcon,
   PencilSquareIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 
 export default function DonorManagementPage() {
@@ -23,6 +26,9 @@ export default function DonorManagementPage() {
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [showNewSupporterForm, setShowNewSupporterForm] = useState(false);
   const [showEditSupporterForm, setShowEditSupporterForm] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [donorPage, setDonorPage] = useState(1);
+  const DONOR_PAGE_SIZE = 15;
   const [editSupporterForm, setEditSupporterForm] = useState<Record<string, any>>({});
   const [newSupporter, setNewSupporter] = useState({ supporterType: 'Individual', firstName: '', lastName: '', displayName: '', organizationName: '', email: '', phone: '', country: 'Philippines', region: '', acquisitionChannel: 'Direct' });
   const [donationForm, setDonationForm] = useState({ donationType: 'Monetary', amount: 0, campaignName: '', currencyCode: 'PHP', isRecurring: false });
@@ -93,6 +99,25 @@ export default function DonorManagementPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleDeleteSupporter = async () => {
+    if (!selected) return;
+    try {
+      await api.supporters.delete(selected.supporterId);
+      setSupporters(prev => prev.filter(s => s.supporterId !== selected.supporterId));
+      setSelected(null);
+      setImpact(null);
+      const sum = await api.supporters.summary();
+      setSummary(sum);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete supporter.');
+    } finally {
+      setDeleteConfirmOpen(false);
+    }
+  };
+
+  const pagedSupporters = supporters.slice((donorPage - 1) * DONOR_PAGE_SIZE, donorPage * DONOR_PAGE_SIZE);
+  const donorTotalPages = Math.ceil(supporters.length / DONOR_PAGE_SIZE);
+
   const selectDonor = async (s: Supporter) => {
     setSelected(s);
     const detail = await api.supporters.get(s.supporterId);
@@ -146,7 +171,7 @@ export default function DonorManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {supporters.map(s => (
+                {pagedSupporters.map(s => (
                   <tr
                     key={s.supporterId}
                     onClick={() => selectDonor(s)}
@@ -169,6 +194,9 @@ export default function DonorManagementPage() {
                 ))}
               </tbody>
             </table>
+            <div className="px-5 pb-4">
+              <Pagination currentPage={donorPage} totalPages={donorTotalPages} onPageChange={p => { setDonorPage(p); setSelected(null); }} />
+            </div>
           </div>
         </div>
 
@@ -256,10 +284,25 @@ export default function DonorManagementPage() {
               >
                 {selected.status === 'At-Risk' ? 'Remove At-Risk Flag' : 'Flag At-Risk'}
               </button>
+              <button
+                onClick={() => setDeleteConfirmOpen(true)}
+                className="w-full flex items-center justify-center gap-1.5 text-sm font-medium py-2.5 rounded-xl border border-red-200 text-red-700 hover:bg-red-50 transition-all"
+              >
+                <TrashIcon className="h-4 w-4" /> Delete Supporter
+              </button>
             </div>
           )}
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        title="Delete Supporter"
+        message={`Permanently delete ${selected?.displayName}? This will remove all their donations and cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleDeleteSupporter}
+        onCancel={() => setDeleteConfirmOpen(false)}
+      />
 
       <Modal open={showDonationForm} onClose={() => setShowDonationForm(false)} title="Record Donation">
         <div className="space-y-4">

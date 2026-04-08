@@ -86,6 +86,25 @@ public class ResidentsController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var resident = await _db.Residents.FindAsync(id);
+        if (resident is null) return NotFound();
+
+        _db.ProcessRecordings.RemoveRange(_db.ProcessRecordings.Where(p => p.ResidentId == id));
+        _db.HomeVisitations.RemoveRange(_db.HomeVisitations.Where(h => h.ResidentId == id));
+        _db.HealthWellbeingRecords.RemoveRange(_db.HealthWellbeingRecords.Where(h => h.ResidentId == id));
+        _db.EducationRecords.RemoveRange(_db.EducationRecords.Where(e => e.ResidentId == id));
+        _db.IncidentReports.RemoveRange(_db.IncidentReports.Where(i => i.ResidentId == id));
+        _db.InterventionPlans.RemoveRange(_db.InterventionPlans.Where(p => p.ResidentId == id));
+        _db.Residents.Remove(resident);
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     [HttpGet("alerts")]
     public async Task<ActionResult> GetAlerts()
     {

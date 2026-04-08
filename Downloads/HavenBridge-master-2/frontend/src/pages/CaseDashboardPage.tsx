@@ -3,8 +3,10 @@ import { api } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
+import Pagination from '../components/Pagination';
 import type { Resident, AlertsData, Safehouse } from '../types/models';
-import { ExclamationTriangleIcon, MagnifyingGlassIcon, FunnelIcon, PlusIcon, PencilSquareIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
+import { ExclamationTriangleIcon, MagnifyingGlassIcon, FunnelIcon, PlusIcon, PencilSquareIcon, ChevronDownIcon, TrashIcon } from '@heroicons/react/24/solid';
 
 type Tab = 'sessions' | 'health' | 'education' | 'visits' | 'conferences' | 'notes';
 
@@ -26,6 +28,10 @@ export default function CaseDashboardPage() {
       .then(([r, a, sh]) => { setResidents(r); setAlerts(a); setSafehouses(sh); })
       .finally(() => setLoading(false));
   }, []);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [residentPage, setResidentPage] = useState(1);
+  const RESIDENT_PAGE_SIZE = 20;
 
   const [showDetails, setShowDetails] = useState(false);
   const [showSessionForm, setShowSessionForm] = useState(false);
@@ -109,6 +115,22 @@ export default function CaseDashboardPage() {
     }
     return filtered;
   }, [residents, searchTerm, statusFilter, riskFilter, safehouseFilter]);
+
+  const handleDeleteResident = async () => {
+    if (!selected) return;
+    try {
+      await api.residents.delete(selected.residentId);
+      setResidents(prev => prev.filter(r => r.residentId !== selected.residentId));
+      setSelected(null);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete resident.');
+    } finally {
+      setDeleteConfirmOpen(false);
+    }
+  };
+
+  const pagedResidents = filteredResidents.slice((residentPage - 1) * RESIDENT_PAGE_SIZE, residentPage * RESIDENT_PAGE_SIZE);
+  const residentTotalPages = Math.ceil(filteredResidents.length / RESIDENT_PAGE_SIZE);
 
   const selectResident = async (id: number) => {
     const detail = await api.residents.get(id);
@@ -198,7 +220,7 @@ export default function CaseDashboardPage() {
               </select>
             </div>
             <ul className="divide-y divide-gray-50 max-h-[calc(100vh-340px)] overflow-y-auto">
-              {filteredResidents.map(r => (
+              {pagedResidents.map(r => (
                 <li key={r.residentId}>
                   <button
                     onClick={() => selectResident(r.residentId)}
@@ -215,6 +237,9 @@ export default function CaseDashboardPage() {
                 </li>
               ))}
             </ul>
+            <div className="px-3 pb-3">
+              <Pagination currentPage={residentPage} totalPages={residentTotalPages} onPageChange={p => { setResidentPage(p); setSelected(null); }} />
+            </div>
           </div>
         </aside>
 
@@ -248,6 +273,9 @@ export default function CaseDashboardPage() {
                       </div>
                       <button onClick={openEditForm} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-haven-700 bg-haven-50 rounded-xl hover:bg-haven-100 transition-all">
                         <PencilSquareIcon className="h-4 w-4" /> Edit
+                      </button>
+                      <button onClick={() => setDeleteConfirmOpen(true)} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-700 bg-red-50 rounded-xl hover:bg-red-100 transition-all">
+                        <TrashIcon className="h-4 w-4" /> Delete
                       </button>
                     </div>
                   </div>
@@ -627,6 +655,15 @@ export default function CaseDashboardPage() {
           </div>
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        title="Delete Resident"
+        message={`Permanently delete resident ${selected?.internalCode}? This will remove all sessions, visits, health records, and case notes. This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleDeleteResident}
+        onCancel={() => setDeleteConfirmOpen(false)}
+      />
 
       <Modal open={showSessionForm} onClose={() => setShowSessionForm(false)} title="Add Counseling Session">
         <div className="space-y-4">

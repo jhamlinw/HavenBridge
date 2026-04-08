@@ -1,7 +1,7 @@
 import { getToken } from './auth';
 import type { User } from '../types/models';
 
-const BASE = import.meta.env.VITE_API_URL ?? '/api';
+const BASE = import.meta.env.VITE_API_URL ?? 'https://intex-backend-one-two-b8chggdma6buaee7.francecentral-01.azurewebsites.net/api';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -37,6 +37,7 @@ export const api = {
     get: (id: number) => request<any>(`/residents/${id}`),
     create: (data: any) => request<any>('/residents', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: number, data: any) => request<any>(`/residents/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => request<void>(`/residents/${id}`, { method: 'DELETE' }),
     alerts: () => request<any>('/residents/alerts'),
   },
   supporters: {
@@ -44,6 +45,7 @@ export const api = {
     get: (id: number) => request<any>(`/supporters/${id}`),
     create: (data: any) => request<any>('/supporters', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: number, data: any) => request<any>(`/supporters/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => request<void>(`/supporters/${id}`, { method: 'DELETE' }),
     flagAtRisk: (id: number) => request<any>(`/supporters/${id}/flag-at-risk`, { method: 'PUT' }),
     summary: () => request<any>('/supporters/summary'),
   },
