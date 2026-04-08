@@ -45,6 +45,7 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
 
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+          <Route path="privacy" element={<PrivacyPolicyPage />} />
           <Route path="donor-portal" element={<DonorPortalPage />} />
 
           {/* Protected staff routes */}

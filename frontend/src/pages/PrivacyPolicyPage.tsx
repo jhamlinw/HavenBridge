@@ -2,21 +2,25 @@ import { Link } from 'react-router-dom';
 import { ArrowLeftIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
+import { isAuthenticated, hasRole } from '../services/auth';
 
 const LAST_UPDATED = 'April 6, 2026';
 
 export default function PrivacyPolicyPage() {
+  const authed = isAuthenticated();
+  const backTo = authed ? (hasRole('Staff') ? '/dashboard' : '/donor-portal') : '/welcome';
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-      <PublicNav />
+      {!authed && <PublicNav />}
 
       <div className="mx-auto max-w-3xl px-6 py-10 sm:py-14">
         <Link
-          to="/welcome"
+          to={backTo}
           className="inline-flex items-center gap-2 text-sm font-medium text-haven-700 hover:text-haven-900 transition-colors rounded-md mb-8"
         >
           <ArrowLeftIcon className="h-4 w-4" aria-hidden />
-          Back to home
+          {authed ? 'Back to dashboard' : 'Back to home'}
         </Link>
 
         <article className="bg-white rounded-3xl shadow-sm border border-gray-100 px-6 sm:px-10 py-10 sm:py-12">
@@ -111,14 +115,14 @@ export default function PrivacyPolicyPage() {
           </div>
 
           <p className="mt-12 pt-8 border-t border-gray-100 text-center">
-            <Link to="/welcome" className="text-haven-600 hover:text-haven-700 font-medium text-sm transition-colors">
-              Back to home
+            <Link to={backTo} className="text-haven-600 hover:text-haven-700 font-medium text-sm transition-colors">
+              {authed ? 'Back to dashboard' : 'Back to home'}
             </Link>
           </p>
         </article>
       </div>
 
-      <PublicFooter />
+      {!authed && <PublicFooter />}
     </div>
   );
 }
