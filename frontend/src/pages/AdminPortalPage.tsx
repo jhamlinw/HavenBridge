@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SummaryCard from '../components/SummaryCard';
@@ -27,6 +27,14 @@ interface ManagedUser {
   needPasswordReset: boolean;
 }
 
+interface NewUserForm {
+  username: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  roleId: number;
+}
+
 const ROLE_OPTIONS = [
   { id: 1, label: 'Admin' },
   { id: 2, label: 'Staff' },
@@ -43,6 +51,15 @@ export default function AdminPortalPage() {
   const [usersLoading] = useState(false);
   const [roleUpdating, setRoleUpdating] = useState<number | null>(null);
   const [resetUpdating, setResetUpdating] = useState<number | null>(null);
+  const [deleteUpdating, setDeleteUpdating] = useState<number | null>(null);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [newUser, setNewUser] = useState<NewUserForm>({
+    username: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    roleId: 2,
+  });
 
   useEffect(() => {
     Promise.all([api.impact.overview(), api.admin.users()])
@@ -87,6 +104,55 @@ export default function AdminPortalPage() {
       alert(err.message || 'Failed to update password reset flag.');
     } finally {
       setResetUpdating(null);
+    }
+  };
+
+  const handleCreateUser = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!newUser.username.trim() || !newUser.password.trim()) {
+      alert('Username and password are required.');
+      return;
+    }
+
+    setCreatingUser(true);
+    try {
+      const created = await api.admin.createUser({
+        username: newUser.username.trim(),
+        password: newUser.password,
+        roleId: newUser.roleId,
+        firstName: newUser.firstName.trim() || undefined,
+        lastName: newUser.lastName.trim() || undefined,
+      });
+
+      setUsers(prev => [...prev, created]);
+      setNewUser({
+        username: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+        roleId: 2,
+      });
+    } catch (err: any) {
+      alert(err.message || 'Failed to create user.');
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    const user = users.find(u => u.userId === userId);
+    if (!user) return;
+    if (!confirm(`Delete user ${user.username}? This cannot be undone.`)) return;
+
+    setDeleteUpdating(userId);
+    try {
+      await api.admin.deleteUser(userId);
+      setUsers(prev => prev.filter(u => u.userId !== userId));
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete user.');
+    } finally {
+      setDeleteUpdating(null);
     }
   };
 
@@ -170,6 +236,58 @@ export default function AdminPortalPage() {
           </div>
         </div>
 
+        <form onSubmit={handleCreateUser} className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Create New User</h3>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <input
+              type="text"
+              placeholder="Username"
+              value={newUser.username}
+              onChange={e => setNewUser(prev => ({ ...prev, username: e.target.value }))}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-haven-500/30"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={newUser.password}
+              onChange={e => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-haven-500/30"
+            />
+            <input
+              type="text"
+              placeholder="First Name"
+              value={newUser.firstName}
+              onChange={e => setNewUser(prev => ({ ...prev, firstName: e.target.value }))}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-haven-500/30"
+            />
+            <input
+              type="text"
+              placeholder="Last Name"
+              value={newUser.lastName}
+              onChange={e => setNewUser(prev => ({ ...prev, lastName: e.target.value }))}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-haven-500/30"
+            />
+            <div className="flex gap-2">
+              <select
+                value={newUser.roleId}
+                onChange={e => setNewUser(prev => ({ ...prev, roleId: Number(e.target.value) }))}
+                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-haven-500/30"
+              >
+                {ROLE_OPTIONS.map(r => (
+                  <option key={r.id} value={r.id}>{r.label}</option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                disabled={creatingUser}
+                className="rounded-lg bg-haven-600 px-3 py-2 text-sm font-semibold text-white hover:bg-haven-700 disabled:opacity-50"
+              >
+                {creatingUser ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </form>
+
         {usersLoading ? (
           <div className="p-10"><LoadingSpinner /></div>
         ) : (
@@ -181,6 +299,7 @@ export default function AdminPortalPage() {
                 <th className="px-6 py-3">Current Role</th>
                 <th className="px-6 py-3">Change Role</th>
                 <th className="px-6 py-3">Password Reset</th>
+                <th className="px-6 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -222,6 +341,15 @@ export default function AdminPortalPage() {
                       }`}
                     >
                       {u.needPasswordReset ? 'Reset Pending' : 'Require Reset'}
+                    </button>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      disabled={deleteUpdating === u.userId}
+                      onClick={() => handleDeleteUser(u.userId)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-100 text-rose-700 hover:bg-rose-200 disabled:opacity-50"
+                    >
+                      {deleteUpdating === u.userId ? 'Deleting...' : 'Delete'}
                     </button>
                   </td>
                 </tr>

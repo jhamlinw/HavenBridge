@@ -77,6 +77,10 @@ export const api = {
     recentActivity: () => request<any[]>('/admin/recent-activity'),
     search: (q: string) => request<any>(`/admin/search?q=${encodeURIComponent(q)}`),
     users: () => request<any[]>('/admin/users'),
+    createUser: (data: { username: string; password: string; roleId: number; firstName?: string; lastName?: string }) =>
+      request<any>('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
+    deleteUser: (userId: number) =>
+      request<any>(`/admin/users/${userId}`, { method: 'DELETE' }),
     updateRole: (userId: number, roleId: number) =>
       request<any>(`/admin/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ roleId }) }),
     setPasswordReset: (userId: number, needPasswordReset: boolean) =>
