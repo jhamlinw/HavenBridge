@@ -8,12 +8,16 @@ import {
   Bars3Icon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { getToken, getUserName, hasRole } from '../services/auth';
 
 const HERO_IMAGE =
   'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80&auto=format&fit=crop';
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const isLoggedIn = !!getToken();
+  const username = isLoggedIn ? getUserName() : null;
+  const dashboardPath = hasRole('Staff') ? '/dashboard' : '/donor-portal';
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -40,18 +44,30 @@ export default function LandingPage() {
             >
               Privacy
             </Link>
-            <Link
-              to="/register"
-              className="ml-2 inline-flex items-center rounded-lg border border-white/25 bg-white/10 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
-            >
-              Register
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 px-4 py-2 text-sm font-semibold text-white hover:bg-white/25 transition-colors"
-            >
-              Sign In
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                to={dashboardPath}
+                className="ml-2 inline-flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 px-4 py-2 text-sm font-semibold text-white hover:bg-white/25 transition-colors"
+              >
+                {username ?? 'My Account'}
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/register"
+                  className="ml-2 inline-flex items-center rounded-lg border border-white/25 bg-white/10 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                >
+                  Register
+                </Link>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 px-4 py-2 text-sm font-semibold text-white hover:bg-white/25 transition-colors"
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -73,12 +89,20 @@ export default function LandingPage() {
             <Link to="/privacy" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors">
               Privacy
             </Link>
-            <Link to="/register" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white hover:bg-white/10 transition-colors">
-              Register
-            </Link>
-            <Link to="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-white bg-white/15 hover:bg-white/25 text-center mt-2 transition-colors">
-              Sign In
-            </Link>
+            {isLoggedIn ? (
+              <Link to={dashboardPath} onClick={() => setMenuOpen(false)} className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-white bg-white/15 hover:bg-white/25 text-center mt-2 transition-colors">
+                {username ?? 'My Account'} <ArrowRightIcon className="h-3.5 w-3.5" />
+              </Link>
+            ) : (
+              <>
+                <Link to="/register" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white hover:bg-white/10 transition-colors">
+                  Register
+                </Link>
+                <Link to="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-white bg-white/15 hover:bg-white/25 text-center mt-2 transition-colors">
+                  Sign In
+                </Link>
+              </>
+            )}
           </div>
         )}
       </nav>
@@ -206,8 +230,14 @@ export default function LandingPage() {
           <div className="flex items-center gap-6 text-sm text-gray-500">
             <Link to="/impact" className="hover:text-gray-900 transition-colors">Impact</Link>
             <Link to="/privacy" className="hover:text-gray-900 transition-colors">Privacy</Link>
-            <Link to="/register" className="hover:text-gray-900 transition-colors">Register</Link>
-            <Link to="/login" className="hover:text-gray-900 transition-colors">Sign In</Link>
+            {isLoggedIn ? (
+              <Link to={dashboardPath} className="hover:text-gray-900 transition-colors">{username ?? 'My Account'}</Link>
+            ) : (
+              <>
+                <Link to="/register" className="hover:text-gray-900 transition-colors">Register</Link>
+                <Link to="/login" className="hover:text-gray-900 transition-colors">Sign In</Link>
+              </>
+            )}
           </div>
           <p className="text-xs text-gray-400">
             © {new Date().getFullYear()} HavenBridge

@@ -53,7 +53,7 @@ export default function AppLayout() {
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/70 sticky top-0 z-30 shadow-sm">
         <div className="max-w-[1600px] mx-auto flex items-center h-16 px-6">
           <NavLink
-            to={hasRole('Staff') ? '/dashboard' : '/donor-portal'}
+            to="/welcome"
             className="flex items-center gap-2.5 mr-4 lg:mr-10 shrink-0"
           >
             <img src="/favicon.svg" alt="HavenBridge" className="h-9 w-9" />
