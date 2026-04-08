@@ -83,7 +83,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
+    Promise.allSettled([
       api.impact.overview(),
       api.safehouses.list(),
       api.supporters.summary(),
@@ -91,13 +91,21 @@ export default function ReportsPage() {
       api.reports.charts(),
       api.reports.mlPipelines(),
     ])
-      .then(([ov, sh, sup, al, ch, ml]) => {
-        setOverview(ov as ImpactOverview);
-        setSafehouses((Array.isArray(sh) ? sh : []).map((row) => normalizeSafehouse(row as Record<string, unknown>)));
-        setSupporterSummary(sup as SupporterSummary);
-        setAlerts(al as AlertsData);
-        setCharts(ch as ChartData);
-        setMlPipelines(Array.isArray(ml?.pipelines) ? (ml.pipelines as MlPipelineSummary[]) : []);
+      .then((results) => {
+        const [ov, sh, sup, al, ch, ml] = results;
+
+        if (ov.status === 'fulfilled') setOverview(ov.value as ImpactOverview);
+        if (sh.status === 'fulfilled') {
+          setSafehouses((Array.isArray(sh.value) ? sh.value : []).map((row) => normalizeSafehouse(row as Record<string, unknown>)));
+        }
+        if (sup.status === 'fulfilled') setSupporterSummary(sup.value as SupporterSummary);
+        if (al.status === 'fulfilled') setAlerts(al.value as AlertsData);
+        if (ch.status === 'fulfilled') setCharts(ch.value as ChartData);
+        if (ml.status === 'fulfilled') {
+          setMlPipelines(Array.isArray(ml.value?.pipelines) ? (ml.value.pipelines as MlPipelineSummary[]) : []);
+        } else {
+          setMlPipelines([]);
+        }
       })
       .finally(() => setLoading(false));
   }, []);
