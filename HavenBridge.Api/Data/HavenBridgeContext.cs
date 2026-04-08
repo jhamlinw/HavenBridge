@@ -80,62 +80,61 @@ public class HavenBridgeContext : DbContext
             .HasForeignKey(pr => pr.SocialWorkerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // MySQL TEXT column types for long-content fields
         modelBuilder.Entity<ProcessRecording>(e =>
         {
-            e.Property(p => p.SessionNarrative).HasColumnType("text");
-            e.Property(p => p.InterventionsApplied).HasColumnType("text");
-            e.Property(p => p.FollowUpActions).HasColumnType("text");
+            e.Property(p => p.SessionNarrative).HasColumnType("nvarchar(max)");
+            e.Property(p => p.InterventionsApplied).HasColumnType("nvarchar(max)");
+            e.Property(p => p.FollowUpActions).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<HomeVisitation>(e =>
         {
-            e.Property(p => p.Observations).HasColumnType("text");
-            e.Property(p => p.FollowUpNotes).HasColumnType("text");
-            e.Property(p => p.Purpose).HasColumnType("text");
+            e.Property(p => p.Observations).HasColumnType("nvarchar(max)");
+            e.Property(p => p.FollowUpNotes).HasColumnType("nvarchar(max)");
+            e.Property(p => p.Purpose).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<InterventionPlan>(e =>
         {
-            e.Property(p => p.PlanDescription).HasColumnType("text");
-            e.Property(p => p.ServicesProvided).HasColumnType("text");
+            e.Property(p => p.PlanDescription).HasColumnType("nvarchar(max)");
+            e.Property(p => p.ServicesProvided).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<IncidentReport>(e =>
         {
-            e.Property(p => p.Description).HasColumnType("text");
-            e.Property(p => p.ResponseTaken).HasColumnType("text");
+            e.Property(p => p.Description).HasColumnType("nvarchar(max)");
+            e.Property(p => p.ResponseTaken).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<Resident>(e =>
         {
-            e.Property(p => p.InitialCaseAssessment).HasColumnType("text");
+            e.Property(p => p.InitialCaseAssessment).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<PublicImpactSnapshot>(e =>
         {
-            e.Property(p => p.SummaryText).HasColumnType("text");
-            e.Property(p => p.MetricPayloadJson).HasColumnType("text");
+            e.Property(p => p.SummaryText).HasColumnType("nvarchar(max)");
+            e.Property(p => p.MetricPayloadJson).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<SocialMediaPost>(e =>
         {
-            e.Property(p => p.Caption).HasColumnType("text");
-            e.Property(p => p.Hashtags).HasColumnType("text");
-            e.Property(p => p.PostUrl).HasColumnType("text");
+            e.Property(p => p.Caption).HasColumnType("nvarchar(max)");
+            e.Property(p => p.Hashtags).HasColumnType("nvarchar(max)");
+            e.Property(p => p.PostUrl).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<Safehouse>(e =>
         {
-            e.Property(p => p.Notes).HasColumnType("text");
+            e.Property(p => p.Notes).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<Donation>(e =>
         {
-            e.Property(p => p.Notes).HasColumnType("text");
+            e.Property(p => p.Notes).HasColumnType("nvarchar(max)");
         });
 
-        // Oracle MySQL provider returns DATE columns as DateTime; convert to/from DateOnly
+        // Ensure DateOnly properties map correctly to SQL Server date columns
         var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
             d => d.ToDateTime(TimeOnly.MinValue),
             dt => DateOnly.FromDateTime(dt));

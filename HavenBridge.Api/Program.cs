@@ -14,9 +14,6 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=localhost;Port=3306;Database=havenbridge;User=root;Password=HavenBridge2026!;";
-
 builder.Services.AddDbContext<HavenBridgeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
