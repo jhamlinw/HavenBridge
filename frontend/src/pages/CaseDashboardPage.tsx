@@ -157,8 +157,8 @@ export default function CaseDashboardPage() {
         <p className="text-gray-500 mt-2 text-base">View and manage all resident cases, sessions, and records.</p>
       </div>
 
-      <div className="flex gap-6">
-        <aside aria-label="Resident list" className="w-80 shrink-0">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <aside aria-label="Resident list" className="w-full lg:w-80 lg:shrink-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 py-3.5 bg-gray-50/80 border-b border-gray-100">
               <div className="flex items-center justify-between mb-2.5">
@@ -210,7 +210,7 @@ export default function CaseDashboardPage() {
                 ))}
               </select>
             </div>
-            <ul className="divide-y divide-gray-50 max-h-[calc(100vh-340px)] overflow-y-auto">
+            <ul className="divide-y divide-gray-50 max-h-64 lg:max-h-[calc(100vh-340px)] overflow-y-auto">
               {filteredResidents.map(r => (
                 <li key={r.residentId}>
                   <button
@@ -607,7 +607,7 @@ export default function CaseDashboardPage() {
           )}
         </div>
 
-        <aside aria-label="Alerts" className="w-64 shrink-0">
+        <aside aria-label="Alerts" className="w-full lg:w-64 lg:shrink-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 py-3.5 bg-gradient-to-r from-red-50 to-red-100/50 border-b border-red-100 flex items-center gap-2">
               <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />

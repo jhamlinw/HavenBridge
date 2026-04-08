@@ -142,7 +142,7 @@ export default function DonorManagementPage() {
         </section>
       )}
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         <section aria-label="Donor list" className="flex-1 min-w-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <table className="w-full">
@@ -182,7 +182,7 @@ export default function DonorManagementPage() {
           </div>
         </section>
 
-        <aside aria-label="Donor details" className="w-80 shrink-0">
+        <aside aria-label="Donor details" className="w-full lg:w-80 lg:shrink-0">
           {!selected ? (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-400 text-sm">
               Select a donor to view details.
