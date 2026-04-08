@@ -19,6 +19,7 @@ export default function DonorPortalPage() {
   const [donateForm, setDonateForm] = useState({ donationType: 'Monetary', amount: 0, campaignName: '', currencyCode: 'PHP', isRecurring: false });
   const [donateLoading, setDonateLoading] = useState(false);
   const [donateSuccess, setDonateSuccess] = useState(false);
+  const [creatingProfile, setCreatingProfile] = useState(false);
 
   const loadDonorData = async (supporterId: number) => {
     const [d, imp, snaps] = await Promise.all([
@@ -73,8 +74,6 @@ export default function DonorPortalPage() {
   };
 
   if (loading) return <LoadingSpinner />;
-
-  const [creatingProfile, setCreatingProfile] = useState(false);
 
   const handleCreateProfile = async () => {
     setCreatingProfile(true);
