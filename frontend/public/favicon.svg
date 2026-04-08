@@ -9,10 +9,9 @@
 </clipPath>
 <linearGradient id="linear-pattern-0" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0" gradientTransform="matrix(2478.7, 0, 0, 2478.7, 697.138, 1936.49)">
 <stop offset="0" stop-color="rgb(100%, 95.69%, 98.43%)" stop-opacity="1"/>
-<stop offset="0.25" stop-color="rgb(100%, 81.57%, 92.55%)" stop-opacity="1"/>
-<stop offset="0.5" stop-color="rgb(98.43%, 49.02%, 77.65%)" stop-opacity="1"/>
-<stop offset="0.75" stop-color="rgb(85.49%, 17.65%, 59.22%)" stop-opacity="1"/>
-<stop offset="1" stop-color="rgb(59.22%, 11.37%, 38.82%)" stop-opacity="1"/>
+<stop offset="0.35" stop-color="rgb(100%, 81.57%, 92.55%)" stop-opacity="1"/>
+<stop offset="0.7" stop-color="rgb(100%, 67.84%, 86.67%)" stop-opacity="1"/>
+<stop offset="1" stop-color="rgb(98.43%, 49.02%, 77.65%)" stop-opacity="1"/>
 </linearGradient>
 </defs>
 <path fill-rule="evenodd" fill="rgb(71.76%, 12.16%, 47.06%)" fill-opacity="1" d="M 1936.488281 0 C 3001.578125 0 3872.980469 871.421875 3872.980469 1936.488281 C 3872.980469 3001.578125 3001.578125 3872.980469 1936.488281 3872.980469 C 871.414062 3872.980469 0 3001.578125 0 1936.488281 C 0 871.421875 871.414062 0 1936.488281 0 "/>
