@@ -41,39 +41,44 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult> Register([FromBody] RegisterRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
+        var normalizedUsername = req.Username?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedUsername) || string.IsNullOrWhiteSpace(req.Password))
             return BadRequest(new { message = "Username and password are required." });
 
         var pwError = ValidatePasswordStrength(req.Password);
         if (pwError != null)
             return BadRequest(new { message = pwError });
 
-        var exists = await _db.Users.AnyAsync(u => u.Username == req.Username);
+        var exists = await _db.Users.AnyAsync(u => u.Username == normalizedUsername);
         if (exists)
             return Conflict(new { message = "Username is already taken." });
+
+        var donorRole = await _db.Roles.FirstOrDefaultAsync(r => r.RoleId == 3);
+        if (donorRole == null)
+            return StatusCode(500, new { message = "Required role data is missing (Donor role)." });
 
         var user = new User
         {
             RoleId = 3,
             SupporterId = null,
             Supporter = null,
-            Username = req.Username,
+            Username = normalizedUsername,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
             UserFirstName = req.FirstName,
             UserLastName = req.LastName,
-            IsSocialWorker = false
+            IsSocialWorker = false,
+            NeedPasswordReset = true
         };
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        var role = await _db.Roles.FindAsync(user.RoleId);
-        var token = GenerateToken(user, role!.Description);
+        var token = GenerateToken(user, donorRole.Description);
 
         return Ok(new
         {
             token,
-            user = new { user.UserId, user.Username, user.UserFirstName, user.UserLastName, role = role.Description, user.SupporterId }
+            user = new { user.UserId, user.Username, user.UserFirstName, user.UserLastName, role = donorRole.Description, user.SupporterId }
         });
     }
 
