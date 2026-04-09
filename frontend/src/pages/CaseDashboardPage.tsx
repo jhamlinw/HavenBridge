@@ -389,8 +389,8 @@ export default function CaseDashboardPage() {
 
               {/* Tabs */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="border-b border-gray-100 px-6">
-                  <nav aria-label="Case record tabs" className="flex gap-6 -mb-px">
+                <div className="border-b border-gray-100 px-6 overflow-x-auto">
+                  <nav aria-label="Case record tabs" className="flex gap-6 -mb-px whitespace-nowrap">
                     {tabs.map(t => (
                       <button
                         key={t.key}
