@@ -766,7 +766,7 @@ export default function CaseDashboardPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Visit Type</label>
               <select value={visitForm.visitType} onChange={e => setVisitForm(f => ({ ...f, visitType: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all">
-                <option>Routine Follow-Up</option><option>Reintegration Assessment</option><option>Post-Placement Monitoring</option><option>Emergency</option>
+                <option>Initial Assessment</option><option>Routine Follow-Up</option><option>Reintegration Assessment</option><option>Post-Placement Monitoring</option><option>Emergency</option>
               </select>
             </div>
           </div>
