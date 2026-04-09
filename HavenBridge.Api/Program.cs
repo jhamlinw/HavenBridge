@@ -96,6 +96,11 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+else
+{
+    // Enforce HSTS in production
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 
