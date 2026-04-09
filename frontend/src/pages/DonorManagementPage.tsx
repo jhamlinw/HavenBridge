@@ -146,8 +146,8 @@ export default function DonorManagementPage() {
 
       <div className="flex flex-col lg:flex-row gap-6">
         <section aria-label="Donor list" className="flex-1 min-w-0">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="bg-gray-50/80 border-b border-gray-100">
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>

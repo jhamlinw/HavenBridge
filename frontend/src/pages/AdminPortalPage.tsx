@@ -305,7 +305,8 @@ export default function AdminPortalPage() {
         {usersLoading ? (
           <div className="p-10"><LoadingSpinner /></div>
         ) : (
-          <table className="w-full text-left">
+          <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[700px]">
             <thead>
               <tr className="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <th className="px-6 py-3">Username</th>
@@ -370,6 +371,7 @@ export default function AdminPortalPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
         <Pagination page={userPage} pageSize={USER_PAGE_SIZE} totalCount={userTotalCount} onPageChange={loadUsers} />
       </section>
