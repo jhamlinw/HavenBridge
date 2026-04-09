@@ -24,7 +24,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showMfaModal, setShowMfaModal] = useState(false);
   const [mfaTicket, setMfaTicket] = useState('');
-  const [mfaEmail, setMfaEmail] = useState('');
   const [mfaCode, setMfaCode] = useState('');
   const [mfaCodeSent, setMfaCodeSent] = useState(false);
   const [mfaLoading, setMfaLoading] = useState(false);
@@ -67,7 +66,6 @@ export default function LoginPage() {
 
       if (needMfa && mfaTicket) {
         setMfaTicket(mfaTicket);
-        setMfaEmail('');
         setMfaCode('');
         setMfaCodeSent(false);
         setMfaError('');
@@ -95,16 +93,11 @@ export default function LoginPage() {
   const handleSendMfaCode = async () => {
     setMfaError('');
     setMfaInfo('');
-    if (!mfaEmail.trim()) {
-      setMfaError('Please enter your email.');
-      return;
-    }
-
     setMfaLoading(true);
     try {
-      await api.auth.sendMfaCode({ ticket: mfaTicket, email: mfaEmail.trim() });
+      await api.auth.sendMfaCode({ ticket: mfaTicket });
       setMfaCodeSent(true);
-      setMfaInfo('Code sent. Check your inbox and enter the 6-digit code.');
+      setMfaInfo('Code sent to your account email. Check your inbox and enter the 6-digit code.');
     } catch (err: any) {
       setMfaError(err.message || 'Failed to send MFA code.');
     } finally {
@@ -116,10 +109,6 @@ export default function LoginPage() {
     e.preventDefault();
     setMfaError('');
 
-    if (!mfaEmail.trim()) {
-      setMfaError('Please enter your email.');
-      return;
-    }
     if (!mfaCodeSent) {
       setMfaError('Please send a verification code first.');
       return;
@@ -133,7 +122,6 @@ export default function LoginPage() {
     try {
       const { token, needPasswordReset } = await api.auth.verifyMfa({
         ticket: mfaTicket,
-        email: mfaEmail.trim(),
         code: mfaCode.trim(),
       });
       saveToken(token);
@@ -296,7 +284,7 @@ export default function LoginPage() {
           <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 sm:p-10 w-full max-w-md">
             <div className="flex flex-col items-center mb-6">
               <h2 className="text-xl font-bold text-gray-900">Verification Required</h2>
-              <p className="text-sm text-gray-500 mt-1 text-center">MFA is enabled on your account. Enter your email to receive a code.</p>
+              <p className="text-sm text-gray-500 mt-1 text-center">MFA is enabled on your account. We will send a code to your linked email.</p>
             </div>
 
             <form onSubmit={handleVerifyMfa} className="space-y-4" noValidate>
@@ -311,27 +299,14 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <div>
-                <label htmlFor="mfa-email" className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                <div className="flex gap-2">
-                  <input
-                    id="mfa-email"
-                    type="email"
-                    value={mfaEmail}
-                    onChange={e => setMfaEmail(e.target.value)}
-                    className="flex-1 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 shadow-sm focus:border-haven-500 focus:ring-2 focus:ring-haven-500/20 focus:bg-white outline-none transition-all"
-                    placeholder="you@company.org"
-                  />
-                  <button
-                    type="button"
-                    disabled={mfaLoading}
-                    onClick={handleSendMfaCode}
-                    className="rounded-xl bg-haven-100 text-haven-700 px-3 py-2 text-sm font-semibold hover:bg-haven-200 transition-all disabled:opacity-60"
-                  >
-                    Send
-                  </button>
-                </div>
-              </div>
+              <button
+                type="button"
+                disabled={mfaLoading}
+                onClick={handleSendMfaCode}
+                className="w-full rounded-xl bg-haven-100 text-haven-700 px-3 py-2.5 text-sm font-semibold hover:bg-haven-200 transition-all disabled:opacity-60"
+              >
+                Send Code to Linked Email
+              </button>
 
               <div>
                 <label htmlFor="mfa-code" className="block text-sm font-medium text-gray-700 mb-1.5">Code</label>

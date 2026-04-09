@@ -50,8 +50,8 @@ public class AuthController : ControllerBase
     public record RegisterRequest(string Username, string Password, string? FirstName, string? LastName);
     public record LoginRequest(string Username, string Password);
     public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
-    public record SendMfaCodeRequest(string Ticket, string Email);
-    public record VerifyMfaRequest(string Ticket, string Email, string Code);
+    public record SendMfaCodeRequest(string Ticket);
+    public record VerifyMfaRequest(string Ticket, string Code);
 
     [HttpPost("register")]
     public async Task<ActionResult> Register([FromBody] RegisterRequest req)
@@ -163,8 +163,8 @@ public class AuthController : ControllerBase
     [HttpPost("send-mfa-code")]
     public async Task<ActionResult> SendMfaCode([FromBody] SendMfaCodeRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Ticket) || string.IsNullOrWhiteSpace(req.Email))
-            return BadRequest(new { message = "MFA ticket and email are required." });
+        if (string.IsNullOrWhiteSpace(req.Ticket))
+            return BadRequest(new { message = "MFA ticket is required." });
 
         var principal = ValidateMfaTicket(req.Ticket);
         if (principal == null)
@@ -178,9 +178,9 @@ public class AuthController : ControllerBase
         if (user == null || !user.IsMfaEnabled)
             return Unauthorized(new { message = "MFA is not enabled for this account." });
 
-        var email = req.Email.Trim();
-        if (!Regex.IsMatch(email, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
-            return BadRequest(new { message = "Please provide a valid email address." });
+        var email = await GetLinkedMfaEmail(user);
+        if (email == null)
+            return BadRequest(new { message = "No linked email was found on this account. Please contact support." });
 
         var code = Random.Shared.Next(100000, 1000000).ToString();
         MfaChallenges[req.Ticket] = new MfaChallenge
@@ -198,8 +198,8 @@ public class AuthController : ControllerBase
     [HttpPost("verify-mfa")]
     public async Task<ActionResult> VerifyMfa([FromBody] VerifyMfaRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Ticket) || string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Code))
-            return BadRequest(new { message = "MFA ticket, email, and code are required." });
+        if (string.IsNullOrWhiteSpace(req.Ticket) || string.IsNullOrWhiteSpace(req.Code))
+            return BadRequest(new { message = "MFA ticket and code are required." });
 
         var principal = ValidateMfaTicket(req.Ticket);
         if (principal == null)
@@ -217,9 +217,6 @@ public class AuthController : ControllerBase
             MfaChallenges.TryRemove(req.Ticket, out _);
             return Unauthorized(new { message = "MFA code has expired. Request a new code." });
         }
-
-        if (!string.Equals(challenge.Email, req.Email.Trim(), StringComparison.OrdinalIgnoreCase))
-            return Unauthorized(new { message = "MFA email does not match this session." });
 
         if (!string.Equals(challenge.Code, req.Code.Trim(), StringComparison.Ordinal))
             return Unauthorized(new { message = "Invalid MFA code." });
@@ -436,5 +433,24 @@ public class AuthController : ControllerBase
         };
 
         await client.SendMailAsync(mail);
+    }
+
+    private async Task<string?> GetLinkedMfaEmail(User user)
+    {
+        if (!string.IsNullOrWhiteSpace(user.Username) && Regex.IsMatch(user.Username, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+            return user.Username.Trim();
+
+        if (user.SupporterId.HasValue)
+        {
+            var email = await _db.Supporters
+                .Where(s => s.SupporterId == user.SupporterId.Value)
+                .Select(s => s.Email)
+                .FirstOrDefaultAsync();
+
+            if (!string.IsNullOrWhiteSpace(email) && Regex.IsMatch(email, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+                return email.Trim();
+        }
+
+        return null;
     }
 }
