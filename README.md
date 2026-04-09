@@ -27,6 +27,26 @@ This checks prerequisites, restores .NET packages, and installs frontend depende
 
 Launches both the backend API and the frontend dev server in one command. The app opens at **http://localhost:5173**.
 
+### JWT Environment Setup (Required)
+
+Backend auth now reads JWT config from environment variables.
+
+1. Copy `HavenBridge.Api/.env.example` to `HavenBridge.Api/.env`
+2. Set `JWT__KEY` to a strong secret (32+ chars)
+
+```bash
+cd HavenBridge.Api
+cp .env.example .env
+```
+
+Example `.env`:
+
+```env
+JWT__KEY=replace-with-a-long-random-secret-at-least-32-chars
+JWT__ISSUER=HavenBridge.Api
+JWT__AUDIENCE=HavenBridge.Frontend
+```
+
 ### Other Scripts
 
 | Script | What it does |

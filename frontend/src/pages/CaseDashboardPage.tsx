@@ -44,12 +44,17 @@ export default function CaseDashboardPage() {
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [showVisitForm, setShowVisitForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [deletingResident, setDeletingResident] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [sessionForm, setSessionForm] = useState({ sessionDate: new Date().toISOString().split('T')[0], sessionType: 'Individual', sessionDurationMinutes: 60, emotionalStateObserved: '', emotionalStateEnd: '', sessionNarrative: '', interventionsApplied: '', followUpActions: '' });
   const [visitForm, setVisitForm] = useState({ visitDate: new Date().toISOString().split('T')[0], visitType: 'Routine Follow-Up', locationVisited: '', purpose: '', observations: '', familyCooperationLevel: 'Cooperative', safetyConcernsNoted: false, followUpNeeded: false });
 
   const handleAddSession = async () => {
     if (!selected) return;
+    if (!sessionForm.sessionDate || !sessionForm.sessionType || sessionForm.sessionDurationMinutes <= 0 || !sessionForm.sessionNarrative.trim()) {
+      alert('Please provide session date, type, positive duration, and narrative.');
+      return;
+    }
     await api.sessions.create({
       residentId: selected.residentId,
       socialWorker: selected.assignedSocialWorker,
@@ -66,6 +71,10 @@ export default function CaseDashboardPage() {
 
   const handleAddVisit = async () => {
     if (!selected) return;
+    if (!visitForm.visitDate || !visitForm.visitType || !visitForm.locationVisited.trim() || !visitForm.purpose.trim() || !visitForm.observations.trim()) {
+      alert('Please complete visit date, type, location, purpose, and observations.');
+      return;
+    }
     await api.visits.create({
       residentId: selected.residentId,
       socialWorker: selected.assignedSocialWorker,
@@ -93,11 +102,32 @@ export default function CaseDashboardPage() {
 
   const handleEditSave = async () => {
     if (!selected) return;
+    if (!editForm.caseStatus || !editForm.currentRiskLevel || !editForm.assignedSocialWorker?.trim()) {
+      alert('Case status, risk level, and assigned social worker are required.');
+      return;
+    }
     await api.residents.update(selected.residentId, editForm);
     const updated = await api.residents.get(selected.residentId);
     setSelected(updated);
     setResidents(prev => prev.map(r => r.residentId === selected.residentId ? { ...r, ...editForm } : r));
     setShowEditForm(false);
+  };
+
+  const handleDeleteResident = async () => {
+    if (!selected) return;
+    if (!confirm(`Delete resident ${selected.internalCode}? This will remove related case records.`)) return;
+
+    setDeletingResident(true);
+    try {
+      await api.residents.delete(selected.residentId);
+      setResidents(prev => prev.filter(r => r.residentId !== selected.residentId));
+      setSelected(null);
+      await loadResidents(page);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete resident.');
+    } finally {
+      setDeletingResident(false);
+    }
   };
 
   const filteredResidents = useMemo(() => {
@@ -260,9 +290,18 @@ export default function CaseDashboardPage() {
                         <p>Admitted: <span className="font-medium text-gray-900">{selected.dateOfAdmission}</span></p>
                         <p>Worker: <span className="font-medium text-gray-900">{selected.assignedSocialWorker}</span></p>
                       </div>
-                      <button onClick={openEditForm} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-haven-700 bg-haven-50 rounded-xl hover:bg-haven-100 transition-all">
-                        <PencilSquareIcon className="h-4 w-4" /> Edit
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={openEditForm} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-haven-700 bg-haven-50 rounded-xl hover:bg-haven-100 transition-all">
+                          <PencilSquareIcon className="h-4 w-4" /> Edit
+                        </button>
+                        <button
+                          onClick={handleDeleteResident}
+                          disabled={deletingResident}
+                          className="px-3 py-2 text-xs font-medium text-rose-700 bg-rose-50 rounded-xl hover:bg-rose-100 transition-all disabled:opacity-50"
+                        >
+                          {deletingResident ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -646,7 +685,7 @@ export default function CaseDashboardPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Session Date</label>
-              <input type="date" value={sessionForm.sessionDate} onChange={e => setSessionForm(f => ({ ...f, sessionDate: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+              <input type="date" required value={sessionForm.sessionDate} onChange={e => setSessionForm(f => ({ ...f, sessionDate: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Session Type</label>
@@ -658,7 +697,7 @@ export default function CaseDashboardPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Duration (min)</label>
-              <input type="number" value={sessionForm.sessionDurationMinutes} onChange={e => setSessionForm(f => ({ ...f, sessionDurationMinutes: +e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+              <input type="number" min={1} required value={sessionForm.sessionDurationMinutes} onChange={e => setSessionForm(f => ({ ...f, sessionDurationMinutes: +e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Social Worker</label>
@@ -681,7 +720,7 @@ export default function CaseDashboardPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Narrative</label>
-            <textarea rows={3} value={sessionForm.sessionNarrative} onChange={e => setSessionForm(f => ({ ...f, sessionNarrative: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+            <textarea rows={3} required value={sessionForm.sessionNarrative} onChange={e => setSessionForm(f => ({ ...f, sessionNarrative: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Interventions Applied</label>
@@ -703,7 +742,7 @@ export default function CaseDashboardPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Visit Date</label>
-              <input type="date" value={visitForm.visitDate} onChange={e => setVisitForm(f => ({ ...f, visitDate: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+              <input type="date" required value={visitForm.visitDate} onChange={e => setVisitForm(f => ({ ...f, visitDate: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Visit Type</label>
@@ -714,15 +753,15 @@ export default function CaseDashboardPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Location Visited</label>
-            <input value={visitForm.locationVisited} onChange={e => setVisitForm(f => ({ ...f, locationVisited: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" placeholder="e.g. Family Home" />
+            <input required value={visitForm.locationVisited} onChange={e => setVisitForm(f => ({ ...f, locationVisited: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" placeholder="e.g. Family Home" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Purpose</label>
-            <input value={visitForm.purpose} onChange={e => setVisitForm(f => ({ ...f, purpose: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+            <input required value={visitForm.purpose} onChange={e => setVisitForm(f => ({ ...f, purpose: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Observations</label>
-            <textarea rows={3} value={visitForm.observations} onChange={e => setVisitForm(f => ({ ...f, observations: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+            <textarea rows={3} required value={visitForm.observations} onChange={e => setVisitForm(f => ({ ...f, observations: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Family Cooperation</label>

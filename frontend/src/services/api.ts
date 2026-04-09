@@ -44,6 +44,7 @@ export const api = {
     get: (id: number) => request<any>(`/residents/${id}`),
     create: (data: any) => request<any>('/residents', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: number, data: any) => request<any>(`/residents/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => request<any>(`/residents/${id}`, { method: 'DELETE' }),
     alerts: () => request<any>('/residents/alerts'),
   },
   supporters: {

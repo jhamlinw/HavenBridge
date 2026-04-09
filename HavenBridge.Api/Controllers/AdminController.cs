@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HavenBridge.Api.Data;
 using HavenBridge.Api.Models;
+using HavenBridge.Api.Utils;
 
 namespace HavenBridge.Api.Controllers;
 
@@ -62,6 +63,7 @@ public class AdminController : ControllerBase
     [HttpGet("search")]
     public async Task<ActionResult> Search([FromQuery] string q)
     {
+        q = InputSanitizer.Clean(q, 200) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(q))
             return Ok(new { residents = Array.Empty<object>(), supporters = Array.Empty<object>() });
 
@@ -129,11 +131,11 @@ public class AdminController : ControllerBase
 
         var user = new User
         {
-            Username = req.Username.Trim(),
+            Username = InputSanitizer.Clean(req.Username, 100) ?? req.Username.Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
             RoleId = req.RoleId,
-            UserFirstName = req.FirstName,
-            UserLastName = req.LastName,
+            UserFirstName = InputSanitizer.Clean(req.FirstName, 100),
+            UserLastName = InputSanitizer.Clean(req.LastName, 100),
             IsSocialWorker = req.RoleId == 2,
             NeedPasswordReset = false,
             SupporterId = null

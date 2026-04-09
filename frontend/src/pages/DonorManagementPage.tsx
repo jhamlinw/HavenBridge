@@ -37,6 +37,10 @@ export default function DonorManagementPage() {
 
   const handleAddDonation = async () => {
     if (!selected) return;
+    if (donationForm.amount <= 0) {
+      alert('Donation amount must be greater than zero.');
+      return;
+    }
     await api.donations.create({
       supporterId: selected.supporterId,
       donationDate: new Date().toISOString().split('T')[0],
@@ -55,7 +59,14 @@ export default function DonorManagementPage() {
     const name = newSupporter.supporterType === 'Organization'
       ? newSupporter.organizationName
       : `${newSupporter.firstName} ${newSupporter.lastName}`.trim();
-    if (!name) return;
+    if (!name) {
+      alert('Please provide a supporter name.');
+      return;
+    }
+    if (newSupporter.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newSupporter.email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
     const payload = { ...newSupporter, displayName: name, status: 'Active' };
     const created = await api.supporters.create(payload);
     setSupporters(prev => [created, ...prev]);
@@ -80,6 +91,14 @@ export default function DonorManagementPage() {
 
   const handleEditSupporter = async () => {
     if (!selected) return;
+    if (!editSupporterForm.displayName?.trim()) {
+      alert('Display name is required.');
+      return;
+    }
+    if (editSupporterForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editSupporterForm.email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
     const updated = await api.supporters.update(selected.supporterId, editSupporterForm);
     setSelected(updated);
     setSupporters(prev => prev.map(s => s.supporterId === selected.supporterId ? { ...s, ...editSupporterForm } : s));
@@ -283,7 +302,7 @@ export default function DonorManagementPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount</label>
-              <input type="number" value={donationForm.amount} onChange={e => setDonationForm(f => ({ ...f, amount: +e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+              <input type="number" min={1} required value={donationForm.amount} onChange={e => setDonationForm(f => ({ ...f, amount: +e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Currency</label>
@@ -311,7 +330,7 @@ export default function DonorManagementPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Display Name</label>
-            <input value={editSupporterForm.displayName ?? ''} onChange={e => setEditSupporterForm(f => ({ ...f, displayName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+            <input required value={editSupporterForm.displayName ?? ''} onChange={e => setEditSupporterForm(f => ({ ...f, displayName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
@@ -355,17 +374,17 @@ export default function DonorManagementPage() {
           {newSupporter.supporterType === 'Organization' || newSupporter.supporterType === 'Church' || newSupporter.supporterType === 'Foundation' ? (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Organization Name</label>
-              <input value={newSupporter.organizationName} onChange={e => setNewSupporter(f => ({ ...f, organizationName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" placeholder="Organization name" />
+              <input required value={newSupporter.organizationName} onChange={e => setNewSupporter(f => ({ ...f, organizationName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" placeholder="Organization name" />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
-                <input value={newSupporter.firstName} onChange={e => setNewSupporter(f => ({ ...f, firstName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+                <input required value={newSupporter.firstName} onChange={e => setNewSupporter(f => ({ ...f, firstName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
-                <input value={newSupporter.lastName} onChange={e => setNewSupporter(f => ({ ...f, lastName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
+                <input required value={newSupporter.lastName} onChange={e => setNewSupporter(f => ({ ...f, lastName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all" />
               </div>
             </div>
           )}

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using HavenBridge.Api.Data;
 using HavenBridge.Api.Models;
+using HavenBridge.Api.Utils;
 
 namespace HavenBridge.Api.Controllers;
 
@@ -41,7 +42,7 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult> Register([FromBody] RegisterRequest req)
     {
-        var normalizedUsername = req.Username?.Trim();
+        var normalizedUsername = InputSanitizer.Clean(req.Username, 100);
         if (string.IsNullOrWhiteSpace(normalizedUsername) || string.IsNullOrWhiteSpace(req.Password))
             return BadRequest(new { message = "Username and password are required." });
 
@@ -64,8 +65,8 @@ public class AuthController : ControllerBase
             Supporter = null,
             Username = normalizedUsername,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
-            UserFirstName = req.FirstName,
-            UserLastName = req.LastName,
+            UserFirstName = InputSanitizer.Clean(req.FirstName, 100),
+            UserLastName = InputSanitizer.Clean(req.LastName, 100),
             IsSocialWorker = false,
             NeedPasswordReset = false
         };
@@ -107,7 +108,8 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult> Login([FromBody] LoginRequest req)
     {
-        var user = await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Username == req.Username);
+        var normalizedUsername = InputSanitizer.Clean(req.Username, 100);
+        var user = await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Username == normalizedUsername);
         if (user == null)
             return Unauthorized(new { message = "Invalid username or password." });
 
@@ -180,10 +182,10 @@ public class AuthController : ControllerBase
             DisplayName = displayName,
             FirstName = user.UserFirstName,
             LastName = user.UserLastName,
-            Email = req?.Email?.Trim(),
-            Phone = req?.Phone?.Trim(),
-            Region = req?.Region?.Trim(),
-            Country = req?.Country?.Trim(),
+            Email = InputSanitizer.Clean(req?.Email, 200),
+            Phone = InputSanitizer.Clean(req?.Phone, 50),
+            Region = InputSanitizer.Clean(req?.Region, 100),
+            Country = InputSanitizer.Clean(req?.Country, 100),
             Status = "Active",
             AcquisitionChannel = "Self-Registration",
             CreatedAt = DateTime.UtcNow

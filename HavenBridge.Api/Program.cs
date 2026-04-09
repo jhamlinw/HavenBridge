@@ -32,7 +32,11 @@ builder.Services.AddDbContext<HavenBridgeContext>(options =>
         }
     ));
 
-var jwtKey = builder.Configuration["Jwt:Key"]!;
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException("Jwt:Key is not configured. Set it via environment variables or user secrets.");
+}
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

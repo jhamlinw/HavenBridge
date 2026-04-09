@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HavenBridge.Api.Data;
 using HavenBridge.Api.Models;
+using HavenBridge.Api.Utils;
 
 namespace HavenBridge.Api.Controllers;
 
@@ -44,6 +45,19 @@ public class SupportersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Supporter>> Create(Supporter supporter)
     {
+        supporter.SupporterType = InputSanitizer.Clean(supporter.SupporterType, 50);
+        supporter.DisplayName = InputSanitizer.Clean(supporter.DisplayName, 200) ?? string.Empty;
+        supporter.OrganizationName = InputSanitizer.Clean(supporter.OrganizationName, 200);
+        supporter.FirstName = InputSanitizer.Clean(supporter.FirstName, 100);
+        supporter.LastName = InputSanitizer.Clean(supporter.LastName, 100);
+        supporter.RelationshipType = InputSanitizer.Clean(supporter.RelationshipType, 100);
+        supporter.Region = InputSanitizer.Clean(supporter.Region, 100);
+        supporter.Country = InputSanitizer.Clean(supporter.Country, 100);
+        supporter.Email = InputSanitizer.Clean(supporter.Email, 200);
+        supporter.Phone = InputSanitizer.Clean(supporter.Phone, 50);
+        supporter.Status = InputSanitizer.Clean(supporter.Status, 50);
+        supporter.AcquisitionChannel = InputSanitizer.Clean(supporter.AcquisitionChannel, 100);
+
         supporter.CreatedAt = DateTime.UtcNow;
         _db.Supporters.Add(supporter);
         await _db.SaveChangesAsync();
@@ -67,7 +81,7 @@ public class SupportersController : ControllerBase
             if (value is System.Text.Json.JsonElement je)
             {
                 if (prop.PropertyType == typeof(string) || prop.PropertyType == typeof(string))
-                    converted = je.GetString();
+                    converted = InputSanitizer.Clean(je.GetString(), 4000);
                 else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
                     converted = je.TryGetInt32(out var i) ? i : null;
                 else if (prop.PropertyType == typeof(bool))
@@ -75,6 +89,7 @@ public class SupportersController : ControllerBase
                 else
                     converted = je.ToString();
             }
+            if (converted is string s) converted = InputSanitizer.Clean(s, 4000);
             prop.SetValue(existing, converted);
         }
 

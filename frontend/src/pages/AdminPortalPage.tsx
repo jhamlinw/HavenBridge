@@ -127,6 +127,10 @@ export default function AdminPortalPage() {
       alert('Username and password are required.');
       return;
     }
+    if (newUser.password.length < 14) {
+      alert('Password must be at least 14 characters.');
+      return;
+    }
 
     setCreatingUser(true);
     try {
@@ -256,6 +260,7 @@ export default function AdminPortalPage() {
             <input
               type="text"
               placeholder="Username"
+              required
               value={newUser.username}
               onChange={e => setNewUser(prev => ({ ...prev, username: e.target.value }))}
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-haven-500/30"
@@ -263,6 +268,8 @@ export default function AdminPortalPage() {
             <input
               type="password"
               placeholder="Password"
+              required
+              minLength={14}
               value={newUser.password}
               onChange={e => setNewUser(prev => ({ ...prev, password: e.target.value }))}
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-haven-500/30"

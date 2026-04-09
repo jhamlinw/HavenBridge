@@ -6,6 +6,7 @@ import Modal from '../components/Modal';
 import type { Supporter, DonorImpact, PublicImpactSnapshot } from '../types/models';
 import { GiftIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import usePageTitle from '../hooks/usePageTitle';
+import Pagination from '../components/Pagination';
 
 const currencySymbol: Record<string, string> = { USD: '$', PHP: '₱', SGD: 'S$', CAD: 'C$' };
 
@@ -23,6 +24,8 @@ export default function DonorPortalPage() {
   const [donateSuccess, setDonateSuccess] = useState(false);
   const [creatingProfile, setCreatingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({ email: '', phone: '', region: '', country: '' });
+  const [donationsPage, setDonationsPage] = useState(1);
+  const DONATIONS_PAGE_SIZE = 10;
 
   const loadDonorData = async (supporterId: number) => {
     const [d, imp, snaps] = await Promise.all([
@@ -46,6 +49,10 @@ export default function DonorPortalPage() {
       .catch(() => setNoProfile(true))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setDonationsPage(1);
+  }, [donor?.supporterId]);
 
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +87,10 @@ export default function DonorPortalPage() {
 
   const handleCreateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (profileForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileForm.email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
     setCreatingProfile(true);
     try {
       const payload = {
@@ -149,6 +160,8 @@ export default function DonorPortalPage() {
     ? donor.donations.sort((a, b) => b.donationDate.localeCompare(a.donationDate))[0]
     : null;
 
+  const pagedDonations = donor.donations?.slice((donationsPage - 1) * DONATIONS_PAGE_SIZE, donationsPage * DONATIONS_PAGE_SIZE) ?? [];
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
       {/* Welcome Card */}
@@ -185,6 +198,7 @@ export default function DonorPortalPage() {
             {(!donor.donations || donor.donations.length === 0) ? (
               <div className="px-6 py-12 text-center text-gray-400 text-sm">No donations yet. Click "Donate Again" to make your first contribution!</div>
             ) : (
+              <>
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50/80 border-b border-gray-100">
@@ -195,7 +209,7 @@ export default function DonorPortalPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {donor.donations.map(d => (
+                  {pagedDonations.map(d => (
                     <tr key={d.donationId} className="hover:bg-gray-50/60 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-900">{d.donationDate}</td>
                       <td className="px-6 py-4 text-sm text-right font-medium text-gray-900 tabular-nums">{currencySymbol[d.currencyCode] ?? d.currencyCode}{d.amount.toLocaleString()}</td>
@@ -210,6 +224,13 @@ export default function DonorPortalPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination
+                page={donationsPage}
+                pageSize={DONATIONS_PAGE_SIZE}
+                totalCount={donor.donations?.length ?? 0}
+                onPageChange={setDonationsPage}
+              />
+              </>
             )}
           </div>
 

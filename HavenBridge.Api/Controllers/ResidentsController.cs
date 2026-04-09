@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HavenBridge.Api.Data;
 using HavenBridge.Api.Models;
+using HavenBridge.Api.Utils;
 
 namespace HavenBridge.Api.Controllers;
 
@@ -51,6 +52,28 @@ public class ResidentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Resident>> Create(Resident resident)
     {
+        resident.CaseControlNo = InputSanitizer.Clean(resident.CaseControlNo, 100);
+        resident.InternalCode = InputSanitizer.Clean(resident.InternalCode, 100);
+        resident.CaseStatus = InputSanitizer.Clean(resident.CaseStatus, 50);
+        resident.Sex = InputSanitizer.Clean(resident.Sex, 20);
+        resident.BirthStatus = InputSanitizer.Clean(resident.BirthStatus, 50);
+        resident.PlaceOfBirth = InputSanitizer.Clean(resident.PlaceOfBirth, 200);
+        resident.Religion = InputSanitizer.Clean(resident.Religion, 100);
+        resident.CaseCategory = InputSanitizer.Clean(resident.CaseCategory, 100);
+        resident.PwdType = InputSanitizer.Clean(resident.PwdType, 100);
+        resident.SpecialNeedsDiagnosis = InputSanitizer.Clean(resident.SpecialNeedsDiagnosis, 300);
+        resident.AgeUponAdmission = InputSanitizer.Clean(resident.AgeUponAdmission, 50);
+        resident.PresentAge = InputSanitizer.Clean(resident.PresentAge, 50);
+        resident.LengthOfStay = InputSanitizer.Clean(resident.LengthOfStay, 100);
+        resident.ReferralSource = InputSanitizer.Clean(resident.ReferralSource, 200);
+        resident.ReferringAgencyPerson = InputSanitizer.Clean(resident.ReferringAgencyPerson, 200);
+        resident.AssignedSocialWorker = InputSanitizer.Clean(resident.AssignedSocialWorker, 100);
+        resident.InitialCaseAssessment = InputSanitizer.Clean(resident.InitialCaseAssessment, 4000);
+        resident.ReintegrationType = InputSanitizer.Clean(resident.ReintegrationType, 100);
+        resident.ReintegrationStatus = InputSanitizer.Clean(resident.ReintegrationStatus, 100);
+        resident.InitialRiskLevel = InputSanitizer.Clean(resident.InitialRiskLevel, 50);
+        resident.CurrentRiskLevel = InputSanitizer.Clean(resident.CurrentRiskLevel, 50);
+
         resident.CreatedAt = DateTime.UtcNow;
 
         if (resident.DateOfBirth.HasValue)
@@ -107,16 +130,46 @@ public class ResidentsController : ControllerBase
             if (kv.Value is System.Text.Json.JsonElement je)
             {
                 var converted = System.Text.Json.JsonSerializer.Deserialize(je.GetRawText(), target);
+                if (converted is string s)
+                    converted = InputSanitizer.Clean(s, 4000);
                 prop.SetValue(existing, converted);
             }
             else
             {
-                prop.SetValue(existing, Convert.ChangeType(kv.Value, target));
+                object? converted = Convert.ChangeType(kv.Value, target);
+                if (converted is string s)
+                    converted = InputSanitizer.Clean(s, 4000);
+                prop.SetValue(existing, converted);
             }
         }
 
         await _db.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var resident = await _db.Residents.FindAsync(id);
+        if (resident is null) return NotFound();
+
+        var recordings = _db.ProcessRecordings.Where(p => p.ResidentId == id);
+        var plans = _db.InterventionPlans.Where(p => p.ResidentId == id);
+        var visitations = _db.HomeVisitations.Where(v => v.ResidentId == id);
+        var healthRecords = _db.HealthWellbeingRecords.Where(h => h.ResidentId == id);
+        var educationRecords = _db.EducationRecords.Where(e => e.ResidentId == id);
+        var incidents = _db.IncidentReports.Where(i => i.ResidentId == id);
+
+        _db.ProcessRecordings.RemoveRange(recordings);
+        _db.InterventionPlans.RemoveRange(plans);
+        _db.HomeVisitations.RemoveRange(visitations);
+        _db.HealthWellbeingRecords.RemoveRange(healthRecords);
+        _db.EducationRecords.RemoveRange(educationRecords);
+        _db.IncidentReports.RemoveRange(incidents);
+        _db.Residents.Remove(resident);
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Resident and related records deleted successfully." });
     }
 
     [HttpGet("alerts")]

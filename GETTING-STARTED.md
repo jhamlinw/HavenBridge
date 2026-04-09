@@ -65,6 +65,28 @@ cd frontend && npm install && cd ..
 
 This checks all prerequisites, creates the `havenbridge` MySQL database, installs .NET and frontend dependencies.
 
+### Configure JWT environment variables (required)
+
+The backend now requires JWT settings from environment variables (not `appsettings.json`).
+
+1. In `HavenBridge.Api`, copy `.env.example` to `.env`
+2. Set a strong random value for `JWT__KEY` (32+ chars)
+
+Example:
+
+```bash
+cd HavenBridge.Api
+cp .env.example .env
+```
+
+Then edit `.env`:
+
+```env
+JWT__KEY=replace-with-a-long-random-secret-at-least-32-chars
+JWT__ISSUER=HavenBridge.Api
+JWT__AUDIENCE=HavenBridge.Frontend
+```
+
 ---
 
 ## Day-to-Day: Start the App

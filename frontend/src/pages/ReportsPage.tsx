@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import SummaryCard from '../components/SummaryCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Pagination from '../components/Pagination';
 import usePageTitle from '../hooks/usePageTitle';
 import type { ImpactOverview, SupporterSummary, AlertsData } from '../types/models';
 import {
@@ -200,6 +201,8 @@ export default function ReportsPage() {
   const [charts, setCharts] = useState<ChartData | null>(null);
   const [mlPipelines, setMlPipelines] = useState<MlPipelineSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [safehousePage, setSafehousePage] = useState(1);
+  const SAFEHOUSE_PAGE_SIZE = 10;
   usePageTitle('Reports');
 
   useEffect(() => {
@@ -229,6 +232,10 @@ export default function ReportsPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setSafehousePage(1);
+  }, [safehouses.length]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -272,6 +279,7 @@ export default function ReportsPage() {
     sleep: h.avgSleep,
   })) ?? [];
   const reintegrationData = charts?.reintegrationByStatus ?? [];
+  const pagedSafehouses = safehouses.slice((safehousePage - 1) * SAFEHOUSE_PAGE_SIZE, safehousePage * SAFEHOUSE_PAGE_SIZE);
 
   const REINTEGRATION_COLORS: Record<string, string> = {
     'Successful': '#10b981', 'In Progress': '#3b82f6', 'Pending': '#f59e0b',
@@ -556,7 +564,7 @@ export default function ReportsPage() {
                     </td>
                   </tr>
                 ) : (
-                  safehouses.map((sh) => {
+                  pagedSafehouses.map((sh) => {
                     const pct = occupancyPercent(sh.capacityGirls, sh.currentOccupancy);
                     const barColor =
                       pct >= 95 ? 'bg-red-500' : pct >= 80 ? 'bg-warm-500' : 'bg-haven-500';
@@ -586,6 +594,12 @@ export default function ReportsPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={safehousePage}
+            pageSize={SAFEHOUSE_PAGE_SIZE}
+            totalCount={safehouses.length}
+            onPageChange={setSafehousePage}
+          />
         </div>
       </section>
 
