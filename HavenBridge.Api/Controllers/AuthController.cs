@@ -1,5 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +21,15 @@ public class AuthController : ControllerBase
 {
     private readonly HavenBridgeContext _db;
     private readonly IConfiguration _config;
+    private static readonly ConcurrentDictionary<string, MfaChallenge> MfaChallenges = new();
+
+    private sealed class MfaChallenge
+    {
+        public required int UserId { get; init; }
+        public required string Email { get; init; }
+        public required string Code { get; init; }
+        public required DateTime ExpiresAtUtc { get; init; }
+    }
 
     public AuthController(HavenBridgeContext db, IConfiguration config)
     {
@@ -38,6 +50,8 @@ public class AuthController : ControllerBase
     public record RegisterRequest(string Username, string Password, string? FirstName, string? LastName);
     public record LoginRequest(string Username, string Password);
     public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+    public record SendMfaCodeRequest(string Ticket, string Email);
+    public record VerifyMfaRequest(string Ticket, string Email, string Code);
 
     [HttpPost("register")]
     public async Task<ActionResult> Register([FromBody] RegisterRequest req)
@@ -123,11 +137,107 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid username or password." });
         }
 
+        if (user.IsMfaEnabled)
+        {
+            var mfaTicket = GenerateMfaTicket(user);
+            return Ok(new
+            {
+                needMfa = true,
+                mfaTicket,
+                needPasswordReset = user.NeedPasswordReset,
+                user = new { user.UserId, user.Username, user.UserFirstName, user.UserLastName, role = user.Role!.Description, user.SupporterId }
+            });
+        }
+
         var token = GenerateToken(user, user.Role!.Description);
 
         return Ok(new
         {
             token,
+            needMfa = false,
+            needPasswordReset = user.NeedPasswordReset,
+            user = new { user.UserId, user.Username, user.UserFirstName, user.UserLastName, role = user.Role.Description, user.SupporterId }
+        });
+    }
+
+    [HttpPost("send-mfa-code")]
+    public async Task<ActionResult> SendMfaCode([FromBody] SendMfaCodeRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Ticket) || string.IsNullOrWhiteSpace(req.Email))
+            return BadRequest(new { message = "MFA ticket and email are required." });
+
+        var principal = ValidateMfaTicket(req.Ticket);
+        if (principal == null)
+            return Unauthorized(new { message = "MFA session is invalid or expired." });
+
+        var userIdClaim = principal.FindFirstValue("mfa_user_id");
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "MFA session is invalid." });
+
+        var user = await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserId == userId);
+        if (user == null || !user.IsMfaEnabled)
+            return Unauthorized(new { message = "MFA is not enabled for this account." });
+
+        var email = req.Email.Trim();
+        if (!Regex.IsMatch(email, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+            return BadRequest(new { message = "Please provide a valid email address." });
+
+        var code = Random.Shared.Next(100000, 1000000).ToString();
+        MfaChallenges[req.Ticket] = new MfaChallenge
+        {
+            UserId = userId,
+            Email = email,
+            Code = code,
+            ExpiresAtUtc = DateTime.UtcNow.AddMinutes(10)
+        };
+
+        await SendMfaEmailAsync(email, code, user.Username);
+        return Ok(new { message = "MFA code sent.", expiresInSeconds = 600 });
+    }
+
+    [HttpPost("verify-mfa")]
+    public async Task<ActionResult> VerifyMfa([FromBody] VerifyMfaRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Ticket) || string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Code))
+            return BadRequest(new { message = "MFA ticket, email, and code are required." });
+
+        var principal = ValidateMfaTicket(req.Ticket);
+        if (principal == null)
+            return Unauthorized(new { message = "MFA session is invalid or expired." });
+
+        var userIdClaim = principal.FindFirstValue("mfa_user_id");
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "MFA session is invalid." });
+
+        if (!MfaChallenges.TryGetValue(req.Ticket, out var challenge))
+            return Unauthorized(new { message = "MFA code was not requested for this session." });
+
+        if (challenge.ExpiresAtUtc < DateTime.UtcNow)
+        {
+            MfaChallenges.TryRemove(req.Ticket, out _);
+            return Unauthorized(new { message = "MFA code has expired. Request a new code." });
+        }
+
+        if (!string.Equals(challenge.Email, req.Email.Trim(), StringComparison.OrdinalIgnoreCase))
+            return Unauthorized(new { message = "MFA email does not match this session." });
+
+        if (!string.Equals(challenge.Code, req.Code.Trim(), StringComparison.Ordinal))
+            return Unauthorized(new { message = "Invalid MFA code." });
+
+        if (challenge.UserId != userId)
+            return Unauthorized(new { message = "MFA session mismatch." });
+
+        var user = await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserId == userId);
+        if (user == null)
+            return Unauthorized(new { message = "User not found." });
+
+        var token = GenerateToken(user, user.Role!.Description);
+        MfaChallenges.TryRemove(req.Ticket, out _);
+
+        return Ok(new
+        {
+            token,
+            needMfa = false,
             needPasswordReset = user.NeedPasswordReset,
             user = new { user.UserId, user.Username, user.UserFirstName, user.UserLastName, role = user.Role.Description, user.SupporterId }
         });
@@ -245,5 +355,86 @@ public class AuthController : ControllerBase
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private string GenerateMfaTicket(User user)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
+        {
+            new Claim("mfa_user_id", user.UserId.ToString()),
+            new Claim("mfa_required", "true")
+        };
+
+        var ticket = new JwtSecurityToken(
+            issuer: _config["Jwt:Issuer"],
+            audience: _config["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(10),
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(ticket);
+    }
+
+    private ClaimsPrincipal? ValidateMfaTicket(string ticket)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);
+        try
+        {
+            return tokenHandler.ValidateToken(ticket, new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _config["Jwt:Issuer"],
+                ValidAudience = _config["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ClockSkew = TimeSpan.FromSeconds(30)
+            }, out _);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task SendMfaEmailAsync(string toEmail, string code, string username)
+    {
+        var host = _config["Smtp:Host"] ?? Environment.GetEnvironmentVariable("SMTP_HOST");
+        var portRaw = _config["Smtp:Port"] ?? Environment.GetEnvironmentVariable("SMTP_PORT");
+        var smtpUser = _config["Smtp:User"] ?? Environment.GetEnvironmentVariable("SMTP_USER");
+        var smtpPass = _config["Smtp:Pass"] ?? Environment.GetEnvironmentVariable("SMTP_PASS");
+        var from = _config["Smtp:From"] ?? Environment.GetEnvironmentVariable("SMTP_FROM");
+        var sslRaw = _config["Smtp:EnableSsl"] ?? Environment.GetEnvironmentVariable("SMTP_ENABLE_SSL");
+
+        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+            throw new InvalidOperationException("SMTP settings are not configured.");
+
+        var port = int.TryParse(portRaw, out var parsedPort) ? parsedPort : 587;
+        var enableSsl = !string.IsNullOrWhiteSpace(sslRaw) && bool.TryParse(sslRaw, out var parsedSsl) ? parsedSsl : true;
+
+        using var client = new SmtpClient(host, port)
+        {
+            EnableSsl = enableSsl,
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            UseDefaultCredentials = false
+        };
+
+        if (!string.IsNullOrWhiteSpace(smtpUser))
+            client.Credentials = new NetworkCredential(smtpUser, smtpPass);
+
+        using var mail = new MailMessage(from, toEmail)
+        {
+            Subject = "HavenBridge verification code",
+            Body = $"Hello {username},\n\nYour verification code is: {code}\n\nIt expires in 10 minutes.",
+            IsBodyHtml = false
+        };
+
+        await client.SendMailAsync(mail);
     }
 }

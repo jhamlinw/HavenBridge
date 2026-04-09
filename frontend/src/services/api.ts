@@ -32,7 +32,11 @@ export const api = {
     register: (data: { username: string; password: string; firstName?: string; lastName?: string }) =>
       request<{ token: string; user: any }>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
     login: (data: { username: string; password: string }) =>
-      request<{ token: string; needPasswordReset: boolean; user: any }>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+      request<{ token?: string; needMfa?: boolean; mfaTicket?: string; needPasswordReset: boolean; user: any }>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+    sendMfaCode: (data: { ticket: string; email: string }) =>
+      request<{ message: string; expiresInSeconds: number }>('/auth/send-mfa-code', { method: 'POST', body: JSON.stringify(data) }),
+    verifyMfa: (data: { ticket: string; email: string; code: string }) =>
+      request<{ token: string; needMfa: boolean; needPasswordReset: boolean; user: any }>('/auth/verify-mfa', { method: 'POST', body: JSON.stringify(data) }),
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
       request<{ message: string }>('/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
     me: () => request<any>('/auth/me'),

@@ -22,6 +22,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showMfaModal, setShowMfaModal] = useState(false);
+  const [mfaTicket, setMfaTicket] = useState('');
+  const [mfaEmail, setMfaEmail] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaCodeSent, setMfaCodeSent] = useState(false);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaError, setMfaError] = useState('');
+  const [mfaInfo, setMfaInfo] = useState('');
 
   const [showResetModal, setShowResetModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -55,7 +63,20 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const { token, needPasswordReset } = await api.auth.login({ username: username.trim(), password });
+      const { token, needPasswordReset, needMfa, mfaTicket } = await api.auth.login({ username: username.trim(), password });
+
+      if (needMfa && mfaTicket) {
+        setMfaTicket(mfaTicket);
+        setMfaEmail('');
+        setMfaCode('');
+        setMfaCodeSent(false);
+        setMfaError('');
+        setMfaInfo('');
+        setShowMfaModal(true);
+        return;
+      }
+
+      if (!token) throw new Error('Login failed: missing token.');
       saveToken(token);
 
       if (needPasswordReset) {
@@ -68,6 +89,66 @@ export default function LoginPage() {
       setError(err.message || 'Login failed.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendMfaCode = async () => {
+    setMfaError('');
+    setMfaInfo('');
+    if (!mfaEmail.trim()) {
+      setMfaError('Please enter your email.');
+      return;
+    }
+
+    setMfaLoading(true);
+    try {
+      await api.auth.sendMfaCode({ ticket: mfaTicket, email: mfaEmail.trim() });
+      setMfaCodeSent(true);
+      setMfaInfo('Code sent. Check your inbox and enter the 6-digit code.');
+    } catch (err: any) {
+      setMfaError(err.message || 'Failed to send MFA code.');
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const handleVerifyMfa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMfaError('');
+
+    if (!mfaEmail.trim()) {
+      setMfaError('Please enter your email.');
+      return;
+    }
+    if (!mfaCodeSent) {
+      setMfaError('Please send a verification code first.');
+      return;
+    }
+    if (!mfaCode.trim()) {
+      setMfaError('Please enter the verification code.');
+      return;
+    }
+
+    setMfaLoading(true);
+    try {
+      const { token, needPasswordReset } = await api.auth.verifyMfa({
+        ticket: mfaTicket,
+        email: mfaEmail.trim(),
+        code: mfaCode.trim(),
+      });
+      saveToken(token);
+      setShowMfaModal(false);
+
+      if (needPasswordReset) {
+        setCurrentPasswordForReset(password);
+        setShowResetModal(true);
+      } else {
+        navigateByRole();
+      }
+    } catch (err: any) {
+      setMfaError(err.message || 'MFA verification failed.');
+    } finally {
+      setMfaLoading(false);
     }
   };
 
@@ -204,6 +285,72 @@ export default function LoginPage() {
               <button type="submit" disabled={resetLoading}
                 className="w-full rounded-xl bg-gradient-to-r from-haven-600 to-haven-700 text-white font-semibold py-3 px-4 hover:from-haven-700 hover:to-haven-800 focus:outline-none focus:ring-2 focus:ring-haven-500 focus:ring-offset-2 shadow-sm hover:shadow-md transition-all disabled:opacity-60">
                 {resetLoading ? 'Changing Password...' : 'Change Password'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showMfaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 sm:p-10 w-full max-w-md">
+            <div className="flex flex-col items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Verification Required</h2>
+              <p className="text-sm text-gray-500 mt-1 text-center">MFA is enabled on your account. Enter your email to receive a code.</p>
+            </div>
+
+            <form onSubmit={handleVerifyMfa} className="space-y-4" noValidate>
+              {mfaError && (
+                <div className="rounded-xl bg-red-50 border border-red-100 text-red-800 text-sm px-4 py-3" role="alert">
+                  {mfaError}
+                </div>
+              )}
+              {mfaInfo && (
+                <div className="rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm px-4 py-3" role="status">
+                  {mfaInfo}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="mfa-email" className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <div className="flex gap-2">
+                  <input
+                    id="mfa-email"
+                    type="email"
+                    value={mfaEmail}
+                    onChange={e => setMfaEmail(e.target.value)}
+                    className="flex-1 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 shadow-sm focus:border-haven-500 focus:ring-2 focus:ring-haven-500/20 focus:bg-white outline-none transition-all"
+                    placeholder="you@company.org"
+                  />
+                  <button
+                    type="button"
+                    disabled={mfaLoading}
+                    onClick={handleSendMfaCode}
+                    className="rounded-xl bg-haven-100 text-haven-700 px-3 py-2 text-sm font-semibold hover:bg-haven-200 transition-all disabled:opacity-60"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="mfa-code" className="block text-sm font-medium text-gray-700 mb-1.5">Code</label>
+                <input
+                  id="mfa-code"
+                  type="text"
+                  value={mfaCode}
+                  onChange={e => setMfaCode(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-gray-900 shadow-sm focus:border-haven-500 focus:ring-2 focus:ring-haven-500/20 focus:bg-white outline-none transition-all"
+                  placeholder="6-digit code"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={mfaLoading}
+                className="w-full rounded-xl bg-gradient-to-r from-haven-600 to-haven-700 text-white font-semibold py-3 px-4 hover:from-haven-700 hover:to-haven-800 focus:outline-none focus:ring-2 focus:ring-haven-500 focus:ring-offset-2 shadow-sm hover:shadow-md transition-all disabled:opacity-60"
+              >
+                {mfaLoading ? 'Verifying...' : 'Verify & Continue'}
               </button>
             </form>
           </div>
