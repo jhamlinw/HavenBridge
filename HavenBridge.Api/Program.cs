@@ -14,6 +14,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
         o.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
 builder.Services.AddOpenApi();
