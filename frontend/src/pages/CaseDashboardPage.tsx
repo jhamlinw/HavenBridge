@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
-import type { Resident, AlertsData, Safehouse } from '../types/models';
+import type { Resident, AlertsData, Safehouse, User } from '../types/models';
 import { ExclamationTriangleIcon, MagnifyingGlassIcon, FunnelIcon, PlusIcon, PencilSquareIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 import Pagination from '../components/Pagination';
 import usePageTitle from '../hooks/usePageTitle';
@@ -23,6 +23,7 @@ export default function CaseDashboardPage() {
   const [riskFilter, setRiskFilter] = useState<string>('');
   const [safehouseFilter, setSafehouseFilter] = useState<string>('');
   const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
+  const [socialWorkers, setSocialWorkers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const PAGE_SIZE = 20;
@@ -35,8 +36,8 @@ export default function CaseDashboardPage() {
   };
 
   useEffect(() => {
-    Promise.all([api.residents.list(1, PAGE_SIZE), api.residents.alerts(), api.safehouses.list()])
-      .then(([res, a, sh]) => { setResidents(res.items); setTotalCount(res.totalCount); setAlerts(a); setSafehouses(sh); })
+    Promise.all([api.residents.list(1, PAGE_SIZE), api.residents.alerts(), api.safehouses.list(), api.users.list().catch(() => [])])
+      .then(([res, a, sh, users]) => { setResidents(res.items); setTotalCount(res.totalCount); setAlerts(a); setSafehouses(sh); setSocialWorkers((users as User[]).filter(u => u.isSocialWorker)); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -46,18 +47,17 @@ export default function CaseDashboardPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [deletingResident, setDeletingResident] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
-  const [sessionForm, setSessionForm] = useState({ sessionDate: new Date().toISOString().split('T')[0], sessionType: 'Individual', sessionDurationMinutes: 60, emotionalStateObserved: '', emotionalStateEnd: '', sessionNarrative: '', interventionsApplied: '', followUpActions: '' });
+  const [sessionForm, setSessionForm] = useState({ sessionDate: new Date().toISOString().split('T')[0], sessionType: 'Individual', sessionDurationMinutes: 60, socialWorker: '', emotionalStateObserved: '', emotionalStateEnd: '', sessionNarrative: '', interventionsApplied: '', followUpActions: '' });
   const [visitForm, setVisitForm] = useState({ visitDate: new Date().toISOString().split('T')[0], visitType: 'Routine Follow-Up', locationVisited: '', purpose: '', observations: '', familyCooperationLevel: 'Cooperative', safetyConcernsNoted: false, followUpNeeded: false });
 
   const handleAddSession = async () => {
     if (!selected) return;
-    if (!sessionForm.sessionDate || !sessionForm.sessionType || sessionForm.sessionDurationMinutes <= 0 || !sessionForm.sessionNarrative.trim()) {
-      alert('Please provide session date, type, positive duration, and narrative.');
+    if (!sessionForm.sessionDate || !sessionForm.sessionType || sessionForm.sessionDurationMinutes <= 0 || !sessionForm.socialWorker || !sessionForm.sessionNarrative.trim()) {
+      alert('Please provide session date, type, social worker, positive duration, and narrative.');
       return;
     }
     await api.sessions.create({
       residentId: selected.residentId,
-      socialWorker: selected.assignedSocialWorker,
       ...sessionForm,
       progressNoted: false,
       concernsFlagged: false,
@@ -464,7 +464,7 @@ export default function CaseDashboardPage() {
                   {activeTab === 'sessions' && (
                     <div className="space-y-4">
                       <div className="flex justify-end">
-                        <button onClick={() => setShowSessionForm(true)} className="flex items-center gap-1.5 px-4 py-2 bg-haven-600 text-white text-xs font-medium rounded-xl hover:bg-haven-700 transition-all shadow-sm hover:shadow-md">
+                        <button onClick={() => { setSessionForm(f => ({ ...f, socialWorker: selected?.assignedSocialWorker ?? '' })); setShowSessionForm(true); }} className="flex items-center gap-1.5 px-4 py-2 bg-haven-600 text-white text-xs font-medium rounded-xl hover:bg-haven-700 transition-all shadow-sm hover:shadow-md">
                           <PlusIcon className="h-4 w-4" /> Add Session
                         </button>
                       </div>
@@ -715,7 +715,12 @@ export default function CaseDashboardPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Social Worker</label>
-              <input disabled value={selected?.assignedSocialWorker ?? ''} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 text-gray-600 outline-none" />
+              <select value={sessionForm.socialWorker} onChange={e => setSessionForm(f => ({ ...f, socialWorker: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-haven-500/20 focus:border-haven-500 outline-none transition-all">
+                <option value="">Select...</option>
+                {socialWorkers.map(sw => (
+                  <option key={sw.userId} value={`SW-${sw.userId}`}>{sw.userFirstName && sw.userLastName ? `${sw.userFirstName} ${sw.userLastName} (SW-${sw.userId})` : `SW-${sw.userId}`}</option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
