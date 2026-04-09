@@ -15,6 +15,7 @@ import {
   UserPlusIcon,
   ClipboardDocumentListIcon,
   CalendarDaysIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 
 interface UpcomingConference {
@@ -25,6 +26,59 @@ interface UpcomingConference {
   residentCode: string;
   residentId: number;
   safehouseName: string;
+}
+
+function ConferencesSection({ conferences }: { conferences: UpcomingConference[] }) {
+  const [open, setOpen] = useState(conferences.length > 0);
+
+  if (conferences.length === 0) {
+    return (
+      <section aria-label="Upcoming case conferences" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/60 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <CalendarDaysIcon className="h-5 w-5 text-haven-600" />
+            <h2 className="font-semibold text-gray-900">Upcoming Case Conferences</h2>
+            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-lg font-medium">None scheduled</span>
+          </div>
+          <ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        {open && (
+          <div className="px-6 pb-5 pt-1 text-sm text-gray-400">
+            No upcoming case conferences found. They will appear here when intervention plans have future conference dates.
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  return (
+    <section aria-label="Upcoming case conferences" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
+        <CalendarDaysIcon className="h-5 w-5 text-haven-600" />
+        <h2 className="font-semibold text-gray-900 text-lg">Upcoming Case Conferences</h2>
+        <span className="text-xs bg-haven-50 text-haven-600 px-2 py-0.5 rounded-lg font-medium">{conferences.length}</span>
+      </div>
+      <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
+        {conferences.map(c => (
+          <Link key={c.planId} to="/cases" className="block px-6 py-4 hover:bg-haven-50/50 transition-colors">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium text-gray-900">{c.residentCode}</span>
+              <span className="text-xs font-semibold text-haven-600 bg-haven-50 px-2.5 py-0.5 rounded-lg">{c.caseConferenceDate}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">{c.planCategory}</span>
+              <span className="text-xs text-gray-400">&middot;</span>
+              <span className="text-xs text-gray-500">{c.safehouseName}</span>
+              <StatusBadge level={c.status} />
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export default function DashboardPage() {
@@ -130,32 +184,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section aria-label="Upcoming case conferences" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
-            <CalendarDaysIcon className="h-5 w-5 text-haven-600" />
-            <h2 className="font-semibold text-gray-900 text-lg">Upcoming Case Conferences</h2>
-          </div>
-          {conferences.length === 0 ? (
-            <div className="px-6 py-10 text-center text-gray-400 text-sm">No upcoming conferences scheduled.</div>
-          ) : (
-            <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
-              {conferences.map(c => (
-                <Link key={c.planId} to="/cases" className="block px-6 py-4 hover:bg-haven-50/50 transition-colors">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-gray-900">{c.residentCode}</span>
-                    <span className="text-xs font-semibold text-haven-600 bg-haven-50 px-2.5 py-0.5 rounded-lg">{c.caseConferenceDate}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">{c.planCategory}</span>
-                    <span className="text-xs text-gray-400">&middot;</span>
-                    <span className="text-xs text-gray-500">{c.safehouseName}</span>
-                    <StatusBadge level={c.status} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+        <ConferencesSection conferences={conferences} />
 
         <section aria-label="Safehouse occupancy" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
