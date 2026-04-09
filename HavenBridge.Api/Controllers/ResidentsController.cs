@@ -52,8 +52,33 @@ public class ResidentsController : ControllerBase
     public async Task<ActionResult<Resident>> Create(Resident resident)
     {
         resident.CreatedAt = DateTime.UtcNow;
+
+        if (resident.DateOfBirth.HasValue)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var dob = resident.DateOfBirth.Value;
+            int years = today.Year - dob.Year;
+            int months = today.Month - dob.Month;
+            if (today.Day < dob.Day) months--;
+            if (months < 0) { years--; months += 12; }
+            resident.PresentAge = $"{years} Years {months} months";
+            resident.AgeUponAdmission = resident.PresentAge;
+        }
+
         _db.Residents.Add(resident);
         await _db.SaveChangesAsync();
+
+        var maxCode = await _db.Residents
+            .Where(r => r.InternalCode != null && r.InternalCode.StartsWith("LS-"))
+            .Select(r => r.InternalCode!)
+            .OrderByDescending(c => c)
+            .FirstOrDefaultAsync();
+        var nextNum = 1;
+        if (maxCode != null && int.TryParse(maxCode.AsSpan(3), out var parsed))
+            nextNum = parsed + 1;
+        resident.InternalCode = $"LS-{nextNum:D4}";
+        await _db.SaveChangesAsync();
+
         return CreatedAtAction(nameof(Get), new { id = resident.ResidentId }, resident);
     }
 
