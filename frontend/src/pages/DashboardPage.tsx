@@ -38,7 +38,7 @@ export default function DashboardPage() {
   useEffect(() => {
     Promise.all([
       api.impact.overview(),
-      api.admin.recentActivity(),
+      api.admin.recentActivity().catch(() => []),
       api.safehouses.list(),
       api.reports.upcomingConferences().catch(() => []),
     ])

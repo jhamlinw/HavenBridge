@@ -26,6 +26,7 @@ public class AdminController : ControllerBase
         return null;
     }
 
+    [Authorize(Roles = "Admin,Staff")]
     [HttpGet("recent-activity")]
     public async Task<ActionResult> GetRecentActivity()
     {
