@@ -40,6 +40,7 @@ interface ChartData {
   educationByStatus: { status: string; count: number }[];
   healthOverTime: { year: number; month: number; avgHealth: number; avgNutrition: number; avgSleep: number }[];
   reintegrationByStatus: { status: string; count: number }[];
+  reintegrationBySafehouse: { safehouseId: number; safehouseName: string; successful: number; inProgress: number; pending: number; failed: number; total: number }[];
 }
 
 interface MlPipelineSummary {
@@ -602,6 +603,54 @@ export default function ReportsPage() {
           />
         </div>
       </section>
+
+      {/* Reintegration by Safehouse */}
+      {charts?.reintegrationBySafehouse && charts.reintegrationBySafehouse.length > 0 && (
+        <section aria-label="Reintegration by safehouse" className="mb-12">
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-5">Reintegration by Safehouse</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50/80 border-b border-gray-100 text-left">
+                    <th className="px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">Safehouse</th>
+                    <th className="px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider text-right">Successful</th>
+                    <th className="px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider text-right">In Progress</th>
+                    <th className="px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider text-right">Pending</th>
+                    <th className="px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider text-right">Failed</th>
+                    <th className="px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider text-right">Total</th>
+                    <th className="px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider min-w-[160px]">Success Rate</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {charts.reintegrationBySafehouse.map(sh => {
+                    const rate = sh.total > 0 ? Math.round((sh.successful / sh.total) * 100) : 0;
+                    const barColor = rate >= 75 ? 'bg-emerald-500' : rate >= 50 ? 'bg-amber-500' : 'bg-red-400';
+                    return (
+                      <tr key={sh.safehouseId} className="hover:bg-gray-50/60 transition-colors">
+                        <td className="px-5 py-4 font-medium text-gray-900">{sh.safehouseName}</td>
+                        <td className="px-5 py-4 text-right tabular-nums text-emerald-700 font-medium">{sh.successful}</td>
+                        <td className="px-5 py-4 text-right tabular-nums text-blue-600">{sh.inProgress}</td>
+                        <td className="px-5 py-4 text-right tabular-nums text-amber-600">{sh.pending}</td>
+                        <td className="px-5 py-4 text-right tabular-nums text-red-600">{sh.failed}</td>
+                        <td className="px-5 py-4 text-right tabular-nums text-gray-700 font-medium">{sh.total}</td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-2.5 rounded-full bg-gray-100 overflow-hidden min-w-[80px]">
+                              <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${rate}%` }} />
+                            </div>
+                            <span className="text-xs text-gray-500 tabular-nums w-12 text-right">{rate}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Donor Overview */}
       {supporterSummary && (

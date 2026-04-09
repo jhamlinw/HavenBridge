@@ -127,6 +127,23 @@ public class ReportsController : ControllerBase
             .OrderByDescending(x => x.count)
             .ToListAsync();
 
+        var reintegrationBySafehouse = await _db.Residents
+            .Include(r => r.Safehouse)
+            .Where(r => r.ReintegrationStatus != null && r.ReintegrationStatus != "")
+            .GroupBy(r => new { r.SafehouseId, SafehouseName = r.Safehouse!.Name })
+            .Select(g => new
+            {
+                safehouseId = g.Key.SafehouseId,
+                safehouseName = g.Key.SafehouseName,
+                successful = g.Count(r => r.ReintegrationStatus == "Successful"),
+                inProgress = g.Count(r => r.ReintegrationStatus == "In Progress"),
+                pending = g.Count(r => r.ReintegrationStatus == "Pending"),
+                failed = g.Count(r => r.ReintegrationStatus == "Failed"),
+                total = g.Count(),
+            })
+            .OrderBy(x => x.safehouseName)
+            .ToListAsync();
+
         return Ok(new
         {
             donationsByMonth,
@@ -138,6 +155,7 @@ public class ReportsController : ControllerBase
             educationByStatus,
             healthOverTime,
             reintegrationByStatus,
+            reintegrationBySafehouse,
         });
     }
 
