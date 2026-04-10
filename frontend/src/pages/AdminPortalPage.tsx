@@ -17,6 +17,7 @@ import {
 interface SearchResults {
   residents: { residentId: number; internalCode: string; caseControlNo: string; caseStatus: string; currentRiskLevel: string }[];
   supporters: { supporterId: number; displayName: string; email: string; status: string }[];
+  users: { userId: number; username: string; name: string; role: string }[];
 }
 
 interface ManagedUser {
@@ -47,8 +48,10 @@ export default function AdminPortalPage() {
   usePageTitle('Admin');
   const [overview, setOverview] = useState<ImpactOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResults | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [usersLoading] = useState(false);
@@ -81,9 +84,20 @@ export default function AdminPortalPage() {
   }, []);
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    const results = await api.admin.search(searchQuery);
-    setSearchResults(results);
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    
+    setSearchLoading(true);
+    try {
+      const results = await api.admin.search(searchQuery);
+      setSearchResults(results);
+    } catch (err: any) {
+      alert(err.message || 'Search failed.');
+    } finally {
+      setSearchLoading(false);
+    }
   };
 
   const handleRoleChange = async (userId: number, newRoleId: number) => {
@@ -196,24 +210,37 @@ export default function AdminPortalPage() {
 
       <section aria-label="Search residents and donors" className="mb-10">
         <div className="relative max-w-xl">
-          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <button 
+            onClick={handleSearch}
+            className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-haven-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-haven-500/30"
+            aria-label="Submit search"
+          >
+            <MagnifyingGlassIcon className="h-5 w-5" />
+          </button>
           <input
             type="text"
-            aria-label="Search residents or donors"
-            placeholder="Search residents or donors..."
+            aria-label="Search residents, donors, or system users"
+            placeholder="Search residents, donors, or users..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-haven-500/30 focus:border-haven-500 transition-all"
           />
         </div>
-        {searchResults && (
+
+        {searchLoading && (
+          <div className="mt-4 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+            <p className="text-sm text-gray-500">Searching...</p>
+          </div>
+        )}
+
+        {!searchLoading && searchResults && (
           <div className="mt-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            {searchResults.residents.length === 0 && searchResults.supporters.length === 0 ? (
+            {searchResults.residents?.length === 0 && searchResults.supporters?.length === 0 && searchResults.users?.length === 0 ? (
               <p className="text-sm text-gray-400">No results found for "{searchQuery}"</p>
             ) : (
               <div className="space-y-5">
-                {searchResults.residents.length > 0 && (
+                {searchResults.residents?.length > 0 && (
                   <div>
                     <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Residents</h4>
                     <div className="space-y-1">
@@ -226,7 +253,7 @@ export default function AdminPortalPage() {
                     </div>
                   </div>
                 )}
-                {searchResults.supporters.length > 0 && (
+                {searchResults.supporters?.length > 0 && (
                   <div>
                     <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Supporters</h4>
                     <div className="space-y-1">
@@ -234,6 +261,19 @@ export default function AdminPortalPage() {
                         <div key={s.supporterId} className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-colors text-sm">
                           <span className="font-medium text-gray-900">{s.displayName}</span>
                           <span className="text-gray-500">{s.email}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {searchResults.users?.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">System Users</h4>
+                    <div className="space-y-1">
+                      {searchResults.users.map(u => (
+                        <div key={u.userId} className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                          <span className="font-medium text-gray-900">{u.name || u.username} <span className="text-gray-400 ml-1">@{u.username}</span></span>
+                          <span className="text-gray-500">{u.role}</span>
                         </div>
                       ))}
                     </div>

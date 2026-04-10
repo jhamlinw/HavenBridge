@@ -31,8 +31,14 @@ public class AdminController : ControllerBase
     public async Task<ActionResult> Search([FromQuery] string q)
     {
         q = InputSanitizer.Clean(q, 200) ?? string.Empty;
+        
+        // Update the empty return to include users
         if (string.IsNullOrWhiteSpace(q))
-            return Ok(new { residents = Array.Empty<object>(), supporters = Array.Empty<object>() });
+            return Ok(new { 
+                residents = Array.Empty<object>(), 
+                supporters = Array.Empty<object>(),
+                users = Array.Empty<object>()
+            });
 
         var residents = await _db.Residents
             .Where(r => r.InternalCode!.Contains(q) || r.CaseControlNo!.Contains(q) || r.AssignedSocialWorker!.Contains(q))
@@ -46,7 +52,23 @@ public class AdminController : ControllerBase
             .Select(s => new { s.SupporterId, s.DisplayName, s.Email, s.Status })
             .ToListAsync();
 
-        return Ok(new { residents, supporters });
+        // Add the new Users query
+        var users = await _db.Users
+            .Include(u => u.Role)
+            .Where(u => u.Username.Contains(q) || 
+                       (u.UserFirstName != null && u.UserFirstName.Contains(q)) || 
+                       (u.UserLastName != null && u.UserLastName.Contains(q)))
+            .Take(10)
+            .Select(u => new { 
+                u.UserId, 
+                u.Username, 
+                Name = (u.UserFirstName + " " + u.UserLastName).Trim(),
+                Role = u.Role!.Description
+            })
+            .ToListAsync();
+
+        // Return all three arrays
+        return Ok(new { residents, supporters, users });
     }
 
     [HttpGet("users")]
